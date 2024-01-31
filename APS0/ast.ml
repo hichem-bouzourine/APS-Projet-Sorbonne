@@ -13,10 +13,10 @@
 type possibleType = Int | Bool
 type singleType = 
       Type of (possibleType) 
-    | TypeFunc of types * singleType (*ARROW*) 
+    | TypeFunc of types * singleType
   and types = 
       ASTType of singleType 
-    | ASTTypes of singleType * types (* multiple types a * b  *)
+    | ASTTypes of singleType * types
 
 type arg = 
     ASTArg of string * singleType

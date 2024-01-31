@@ -17,11 +17,12 @@ let stringify t =
 
 let rec print_singleType stype =
   match stype with 
-    | Type(t)-> Printf.printf " %s " (stringify t)
+    | Type(t)-> Printf.printf "%s" (stringify t)
     | TypeFunc(types, t) -> (
-      Printf.printf "FuncType(";
+      Printf.printf "funcType";
+      Printf.printf "(";
       print_types types;
-      Printf.printf " -> ";
+      Printf.printf ",";
       print_singleType t;
       Printf.printf ")"
     )
@@ -31,14 +32,14 @@ let rec print_singleType stype =
         ASTType(t) -> print_singleType t
       | ASTTypes(t, types) -> (
           print_singleType t;
-          Printf.printf " * "; 
+          Printf.printf "*"; 
           print_types types;
         )
       
 let print_arg arg =
   match arg with
     ASTArg (ident, t) -> (
-      Printf.printf "Arg(" ;
+      Printf.printf "arg(" ;
       Printf.printf "%s" ident ;
       Printf.printf ":";
       print_singleType t;
@@ -67,35 +68,39 @@ let rec print_expr e =
         Printf.printf"])"
       )
     | ASTIf(cond, consequence, alternative) -> (
-        Printf.printf"if ";
+        Printf.printf"if";
+        Printf.printf"(";
         print_expr cond;
-        Printf.printf", consequence ";
+        Printf.printf",";
         print_expr consequence;
-        Printf.printf", alternative ";
+        Printf.printf",";
         print_expr alternative;
+        Printf.printf")";
       )
     | ASTAnd(op1, op2) -> (
-        Printf.printf"and ";
-        Printf.printf"operand 1 ";
+        Printf.printf"and";
+        Printf.printf"(";
         print_expr op1;
-        Printf.printf"operand 2 ";
+        Printf.printf",";
         print_expr op2;
+        Printf.printf")";
       )
     | ASTOr(op1, op2) -> (
-        Printf.printf"or ";
-        Printf.printf"operand 1 ";
+        Printf.printf"or";
+        Printf.printf"(";
         print_expr op1;
-        Printf.printf"operand 2 ";
+        Printf.printf",";
         print_expr op2;
+        Printf.printf")";
       )
     | ASTLambdaExpression(args, expr) -> (
-        Printf.printf "Lambda ([";
+        Printf.printf "lambda";
+        Printf.printf "(";
+        Printf.printf "[";
         print_args args;
-        Printf.printf "],";
-        Printf.printf " init(";
+        Printf.printf "]";
         print_expr expr;
         Printf.printf ")";
-        Printf.printf ")"
     )
 
 and print_exprs es =
@@ -119,7 +124,8 @@ let print_stat s =
 let print_def d =
   match d with
       ASTConst(id, t, e) -> (
-        Printf.printf "CONST( ";
+        Printf.printf "const";
+        Printf.printf "(";
         Printf.printf "%s," id;
         print_singleType t; 
         Printf.printf ",";
@@ -127,7 +133,8 @@ let print_def d =
         Printf.printf ")";
       )
     | ASTFunct(id, t, args, e) -> (
-        Printf.printf "Funtion(";
+        Printf.printf "fun";
+        Printf.printf "(";
         Printf.printf "%s," id;
         print_singleType t;
         Printf.printf "[";
@@ -137,8 +144,8 @@ let print_def d =
         Printf.printf ")"
     )
     | ASTRecFunct(id, t, args, e) -> (
-        Printf.printf "RecFuntion(";
-        Printf.printf "rec ";
+        Printf.printf "funRec";
+        Printf.printf "(";
         Printf.printf "%s," id;
         print_singleType t;
         Printf.printf "[";
@@ -152,9 +159,12 @@ let rec print_cmds c =
   match c with
       ASTStat s -> print_stat s
     | ASTDef(def,c) -> (
+      Printf.printf "cmds";
+      Printf.printf "(";
       print_def def; 
-      Printf.printf " : ";
-      print_cmds c
+      Printf.printf ":";
+      print_cmds c;
+      Printf.printf ")"
     )
 	
 let print_prog p =
