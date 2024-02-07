@@ -21,7 +21,9 @@ let rec print_singleType stype =
     | TypeFunc(types, t) -> (
       Printf.printf "funcType";
       Printf.printf "(";
+      Printf.printf "[";
       print_types types;
+      Printf.printf "]";
       Printf.printf ",";
       print_singleType t;
       Printf.printf ")"
@@ -116,7 +118,8 @@ and print_exprs es =
 let print_stat s =
   match s with
       ASTEcho e -> (
-	Printf.printf("echo(");
+	Printf.printf("echo");
+	Printf.printf("(");
 	print_expr(e);
 	Printf.printf(")")
       )
@@ -168,9 +171,12 @@ let rec print_cmds c =
     )
 	
 let print_prog p =
-  Printf.printf("prog([");
+  Printf.printf("prog");
+  Printf.printf("(");
+  Printf.printf("[");
   print_cmds p;
-  Printf.printf("])")
+  Printf.printf(")");
+  Printf.printf("]")
 ;;
 	
 let fname = Sys.argv.(1) in
