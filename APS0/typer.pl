@@ -72,7 +72,7 @@ type_stat(G,echo(E),void) :-
 	type_expr(G,E,int).	
 
 /* Def Const */
-type_def(G,const(id(X),T,E),[(X|T)|G]):-
+type_def(G,const(id(X),T,E),[(X,T)|G]):-
 	type_expr(G,E,T).	
 
 /* Def Fun */
@@ -80,7 +80,7 @@ type_def(G,const(id(X),T,E),[(X|T)|G]):-
 /* La règle `type_def` définit le type d'une fonction dans un environnement de types G. */
 /* Elle fusionne les arguments avec G, détermine le type de l'expression de la fonction, */
 /* extrait les types des arguments, puis met à jour l'environnement avec le nom de la fonction et son type.*/
-type_def(G,fun(id(funcName),T,args,E),GU):-
+type_def(G,fun(FUN,T,ARGS,E),GU):-
 	append(ARGS,G,G_TEMP), 
 	type_expr(G_TEMP,E,T),
 	get_type_args(ARGS,RES),
@@ -93,7 +93,7 @@ type_def(G,fun(id(funcName),T,args,E),GU):-
 /* Ensuite, elle met à jour l'environnement temporaire avec le type de la fonction, */
 /* analyse le type du corps de la fonction, */
 /* et enfin met à jour l'environnement final avec le nom de la fonction et son type.*/
-type_def(G,funRec(id(funcName),args,T,E),GU):-
+type_def(G,funRec(FUN,ARGS,T,E),GU):-
 	get_type_args(ARGS,RES),
 	append(ARGS,G,G_TEMP), 
     G_TEMP_TEMP = [(ID,typeFunc(RES,T))|G_TEMP],
