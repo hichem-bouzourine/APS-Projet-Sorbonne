@@ -318,7 +318,7 @@ let yyact = [|
     let _1 = (Parsing.peek_val __caml_parser_env 0 : Ast.singleType) in
     Obj.repr(
 # 81 "parser.mly"
-             ( ASTType(_1))
+             ( [_1])
 # 323 "parser.ml"
                : Ast.types))
 ; (fun __caml_parser_env ->
@@ -326,7 +326,7 @@ let yyact = [|
     let _3 = (Parsing.peek_val __caml_parser_env 0 : Ast.types) in
     Obj.repr(
 # 82 "parser.mly"
-                        ( ASTTypes(_1, _3))
+                        (_1::_3)
 # 331 "parser.ml"
                : Ast.types))
 ; (fun __caml_parser_env ->
@@ -341,7 +341,7 @@ let yyact = [|
     let _1 = (Parsing.peek_val __caml_parser_env 0 : Ast.arg) in
     Obj.repr(
 # 89 "parser.mly"
-      (ASTOneArg(_1))
+      ([_1])
 # 346 "parser.ml"
                : Ast.args))
 ; (fun __caml_parser_env ->
@@ -349,7 +349,7 @@ let yyact = [|
     let _3 = (Parsing.peek_val __caml_parser_env 0 : Ast.args) in
     Obj.repr(
 # 90 "parser.mly"
-                (ASTArgs(_1, _3))
+                (_1::_3)
 # 354 "parser.ml"
                : Ast.args))
 (* Entry prog *)

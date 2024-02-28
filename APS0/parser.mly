@@ -78,15 +78,15 @@ singleType:
 ;
 
 types:
-  singleType { ASTType($1)}
-| singleType STAR types { ASTTypes($1, $3)}
+  singleType { [$1]}
+| singleType STAR types {$1::$3}
 ;
 
 arg: IDENT COL singleType {ASTArg($1, $3)}
 ;
 
 args:
-  arg {ASTOneArg($1)}
-| arg COMA args {ASTArgs($1, $3)}
+  arg {[$1]}
+| arg COMA args {$1::$3}
 ;
 

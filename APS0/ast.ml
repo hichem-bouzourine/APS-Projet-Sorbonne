@@ -14,16 +14,12 @@ type possibleType = Int | Bool
 type singleType = 
       Type of (possibleType) 
     | TypeFunc of types * singleType
-  and types = 
-      ASTType of singleType 
-    | ASTTypes of singleType * types
+  and types = singleType list
 
 type arg = 
     ASTArg of string * singleType
 
-type args = 
-    ASTOneArg of arg
-  | ASTArgs of arg * args
+type args = arg list (* <-- inspiré d'un étudiant dans la salle TME*)
 
 
 type expr =

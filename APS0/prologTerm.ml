@@ -31,12 +31,13 @@ let rec print_singleType stype =
 
   and print_types ts = 
     match ts with 
-        ASTType(t) -> print_singleType t
-      | ASTTypes(t, types) -> (
-          print_singleType t;
-          Printf.printf "*"; 
-          print_types types;
-        )
+        [] -> ()
+      | [a] -> print_singleType a
+      | h::tail -> (
+        print_singleType h;
+        Printf.printf "*"; 
+        print_types tail
+      )
       
 let print_arg arg =
   match arg with
@@ -50,13 +51,12 @@ let print_arg arg =
 
 let rec print_args args =
   match args with
-      ASTOneArg a -> print_arg a
-    | ASTArgs(a, argss) -> (
-      print_arg a;
-      Printf.printf "," ;
-      print_args argss
-    )
-
+      [] -> ()
+    | [a] -> print_arg a
+    | h::tail -> 
+        print_arg h;
+        Printf.printf ",";
+        print_args tail
 
 let rec print_expr e =
   match e with
@@ -101,6 +101,7 @@ let rec print_expr e =
         Printf.printf "[";
         print_args args;
         Printf.printf "]";
+        Printf.printf ",";
         print_expr expr;
         Printf.printf ")";
     )
@@ -139,10 +140,13 @@ let print_def d =
         Printf.printf "fun";
         Printf.printf "(";
         Printf.printf "%s," id;
+        Printf.printf ",";
         print_singleType t;
+        Printf.printf ",";
         Printf.printf "[";
         print_args args;
         Printf.printf "]";
+        Printf.printf ",";
         print_expr e;
         Printf.printf ")"
     )
@@ -150,10 +154,13 @@ let print_def d =
         Printf.printf "funRec";
         Printf.printf "(";
         Printf.printf "%s," id;
+        Printf.printf ",";
         print_singleType t;
+        Printf.printf ",";
         Printf.printf "[";
         print_args args;
         Printf.printf "]";
+        Printf.printf ",";
         print_expr e;
         Printf.printf ")"
     )
