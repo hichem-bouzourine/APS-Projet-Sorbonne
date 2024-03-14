@@ -8,7 +8,8 @@
 # ==============================================================================
 
 LEX_ML = ocamllex
-YACC_ML = /usr/local/bin/ocamlyacc
+YACC_ML = /usr/bin/ocamlyacc
+#YACC_ML = /usr/local/bin/ocamlyacc
 OCAMLC = ocamlc
 
 all: prologTerm evaluateur
