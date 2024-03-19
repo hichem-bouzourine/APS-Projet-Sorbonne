@@ -1,0 +1,6 @@
+[
+    CONST u 3;
+    CONST v 2;
+    FUN f int [ x : int , y : int ] ( add x y );
+    ECHO ( f u v )
+]
