@@ -17,8 +17,8 @@ find Samples -type f -name '*.aps' | while read -r file; do
     result=$(./prologTerm "$file" 2>&1)
 
     # Extraire la sortie standard et la sortie d'erreur
-    error_output=$(echo "$result" | grep "Fatal error:")
-    standard_output=$(echo "$result" | grep -v "Fatal error:")
+    error_output=$(echo "$result" | grep "Erreur")
+    standard_output=$(echo "$result" | grep -v "Erreur")
 
     # Vérifier si la sortie d'erreur contient des messages d'erreur
     if [[ ! -z "$error_output" ]]; then

@@ -1,4 +1,4 @@
 [
-    CONST a [x: int, y: int] (add x y);
+    CONST a int [x: int, y: int] (add x y);
     ECHO (a 1 2)
 ]

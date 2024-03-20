@@ -1,5 +1,5 @@
 [
-    FUN REC fib int [x : int] (IF
+    FUN REC fib int [x : int] (if
                                 (le x 1)
                                 1
                                 (add
