@@ -13,6 +13,7 @@ module Env = Map.Make(String)
   | MUL 
   | DIV 
 
+
 (*-V = Z ⊕ F ⊕ FR-*)
 type value = 
   InZ of int (*-Z = valeurs immediates*)
@@ -20,6 +21,10 @@ type value =
   | InFR of singleExpr * string * string list * value Env.t (*-FR(InFR) = Expr(string) × ident(string) × ident∗(string list) × E(value Env.k)-*)
   | InPrim of primOp
   
+let print_value value = (*TODO: to check*)
+  match value with
+    InZ(n) -> Printf.printf "%d\n" n
+  | _ -> failwith "Can't print non integer type"
 
 (*-O(output_stream) = Z∗(int list)-*)
 type output_stream = int list
@@ -110,37 +115,27 @@ let rec eval_def def env =
 
 let rec eval_cmds cmds env flx =
   match cmds with
-  | [] -> flx (* Aucune commande restante, renvoyer la sortie *)
-  | cmd :: rest_cmds ->
-      (match cmd with
       | ASTDef (def, more_cmds) ->
           let new_env = eval_def def env in
           eval_cmds more_cmds new_env flx
       | ASTStat stat ->
-          let new_flx = eval_stat stat flx env in
-          eval_cmds rest_cmds env new_flx)
+          (*let new_flx = eval_stat stat flx env in*)
+          eval_stat stat flx env
 
 
 let rec eval_prog p =
-  match p with
-  | [] -> [] (* Aucune commande à évaluer, renvoyer une liste vide *)
-  | cmds_list :: rest_prog ->
-      let final_output = eval_cmds cmds_list Env.empty [] in
-      final_output :: eval_prog rest_prog
+  let final_output = eval_cmds p Env.empty [] in
+  List.iter (function x -> print_value x) (List.rev final_output) 
+  
 
 ;;
 
-let fname = Sys.argv.(1) in (* <-- inspiré d'un étudiant dans la salle TME *)
-  let ic = open_in fname in
-    try
-      let lexbuf = Lexing.from_channel ic in
-      let p = Parser.prog Lexer.token lexbuf in
-      let _ = eval_prog p in
-      Printf.printf "Evaluation terminée avec succès.\n"
-    with
-    | Lexer.Eof -> Printf.printf "Erreur : fin de fichier inattendue.\n"
-    | Failure msg -> Printf.printf "Erreur : %s\n" msg
-    | Parsing.Parse_error -> Printf.printf "Erreur de syntaxe.\n"
-    | Sys_error msg -> Printf.printf "Erreur système : %s\n" msg
-    | exn -> Printf.printf "Erreur inattendue : %s\n" (Printexc.to_string exn)
-    finally close_in ic
+let fname = Sys.argv.(1) in
+let ic = open_in fname in
+try
+  let lexbuf = Lexing.from_channel ic in
+  let p = Parser.prog Lexer.token lexbuf in
+  let _ = eval_prog p in
+  Printf.printf "Evaluation terminée avec succès.\n"
+with
+| Lexer.Eof -> Printf.printf "Erreur : fin de fichier inattendue.\n"

@@ -30,7 +30,6 @@ let print_singleArg sarg =
     Printf.printf ":";
     print_singleType t;
     Printf.printf ")")
-  | _ -> failwith "Argument de fonction non reconnu lors de l'impression"
 
 let rec print_args args =
   match args with
@@ -83,7 +82,6 @@ let rec print_singleExpr e =
       Printf.printf ",";
       print_singleExpr singleExpr;
       Printf.printf ")";)
-  | _ -> failwith "Expression non reconnue lors de l'impression"
 
 and print_exprs es =
   match es with
@@ -102,7 +100,6 @@ let print_stat s =
       Printf.printf "(";
       print_singleExpr e;
       Printf.printf ")")
-  | _ -> failwith "Instruction non reconnue lors de l'impression"
 
 let print_def d =
   match d with
@@ -140,7 +137,6 @@ let print_def d =
       Printf.printf ",";
       print_singleExpr e;
       Printf.printf ")")
-  | _ -> failwith "Définition non reconnue lors de l'impression"
 
 let rec print_cmds c =
   match c with
@@ -152,7 +148,6 @@ let rec print_cmds c =
     Printf.printf ";";
     print_cmds c;
     Printf.printf ")")
-  | _ -> failwith "Commande non reconnue lors de l'impression"
 
 let print_prog p =
   Printf.printf("prog");
@@ -164,7 +159,7 @@ let print_prog p =
   Printf.printf(".\n")
 ;;
 
-let fname = Sys.argv.(1) in
+let fname = Sys.argv.(1) in (*debugger fait avec l'aide du pro, merci a lui*)
 let ic = open_in fname in
 try
   let lexbuf = Lexing.from_channel ic in
