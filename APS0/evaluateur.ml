@@ -113,32 +113,34 @@ let rec eval_cmds cmds env flx =
   | [] -> flx (* Aucune commande restante, renvoyer la sortie *)
   | cmd :: rest_cmds ->
       (match cmd with
-      | ASTStat stat ->
-          let new_flx = eval_stat stat flx env in
-          eval_cmds rest_cmds env new_flx
       | ASTDef (def, more_cmds) ->
           let new_env = eval_def def env in
-          eval_cmds more_cmds new_env flx)
+          eval_cmds more_cmds new_env flx
+      | ASTStat stat ->
+          let new_flx = eval_stat stat flx env in
+          eval_cmds rest_cmds env new_flx)
+
 
 let rec eval_prog p =
   match p with
   | [] -> [] (* Aucune commande à évaluer, renvoyer une liste vide *)
-  | cmds :: rest_prog ->
-      let final_output = eval_cmds cmds Env.empty [] in
+  | cmds_list :: rest_prog ->
+      let final_output = eval_cmds cmds_list Env.empty [] in
       final_output :: eval_prog rest_prog
+
 ;;
 
 let fname = Sys.argv.(1) in (* <-- inspiré d'un étudiant dans la salle TME *)
-let ic = open_in fname in
-  try
-    let lexbuf = Lexing.from_channel ic in
-    let p = Parser.prog Lexer.token lexbuf in
-    let _ = eval_prog p in
-    Printf.printf "Evaluation terminée avec succès.\n"
-  with
-  | Lexer.Eof -> Printf.printf "Erreur : fin de fichier inattendue.\n"
-  | Failure msg -> Printf.printf "Erreur : %s\n" msg
-  | Parsing.Parse_error -> Printf.printf "Erreur de syntaxe.\n"
-  | Sys_error msg -> Printf.printf "Erreur système : %s\n" msg
-  | exn -> Printf.printf "Erreur inattendue : %s\n" (Printexc.to_string exn)
-  finally close_in ic
+  let ic = open_in fname in
+    try
+      let lexbuf = Lexing.from_channel ic in
+      let p = Parser.prog Lexer.token lexbuf in
+      let _ = eval_prog p in
+      Printf.printf "Evaluation terminée avec succès.\n"
+    with
+    | Lexer.Eof -> Printf.printf "Erreur : fin de fichier inattendue.\n"
+    | Failure msg -> Printf.printf "Erreur : %s\n" msg
+    | Parsing.Parse_error -> Printf.printf "Erreur de syntaxe.\n"
+    | Sys_error msg -> Printf.printf "Erreur système : %s\n" msg
+    | exn -> Printf.printf "Erreur inattendue : %s\n" (Printexc.to_string exn)
+    finally close_in ic

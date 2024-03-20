@@ -101,7 +101,7 @@ let print_stat s =
       Printf.printf "echo";
       Printf.printf "(";
       print_singleExpr e;
-      Printf.printf ")");
+      Printf.printf ")")
   | _ -> failwith "Instruction non reconnue lors de l'impression"
 
 let print_def d =
@@ -168,7 +168,14 @@ let fname = Sys.argv.(1) in
 let ic = open_in fname in
   try
     let lexbuf = Lexing.from_channel ic in
-    let p = Parser.prog Lexer.token lexbuf in
+    let p = 
+      try
+      Parser.prog Lexer.token lexbuf
+      with _ -> let open Lexing in 
+      let curr = lexbuf.lex_curr_p in 
+      curr
+    in
+  
     print_prog p;
     print_string ".\n"
   with Lexer.Eof ->
