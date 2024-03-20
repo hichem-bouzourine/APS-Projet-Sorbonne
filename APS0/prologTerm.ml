@@ -166,17 +166,21 @@ let print_prog p =
 
 let fname = Sys.argv.(1) in
 let ic = open_in fname in
-  try
-    let lexbuf = Lexing.from_channel ic in
-    let p = 
-      try
+try
+  let lexbuf = Lexing.from_channel ic in
+  let p = 
+    try
       Parser.prog Lexer.token lexbuf
-      with _ -> let open Lexing in 
+    with _ ->
+      let open Lexing in 
       let curr = lexbuf.lex_curr_p in 
-      curr
-    in
-  
-    print_prog p;
-    print_string ".\n"
-  with Lexer.Eof ->
-    exit 0
+      let line = curr.pos_lnum in
+      let cnum = curr.pos_cnum - curr.pos_bol in
+      Printf.printf "Erreur de syntaxe à la ligne %d, colonne %d\n" line cnum;
+      exit 1
+  in
+
+  print_prog p;
+  print_string ".\n"
+with Lexer.Eof ->
+  exit 0
