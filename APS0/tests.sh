@@ -16,13 +16,17 @@ find Samples -type f -name '*.aps' | while read -r file; do
     # Exécuter prologTerm pour le fichier en cours
     result=$(./prologTerm "$file" 2>&1)
 
-    # Vérifier si le résultat contient le message d'erreur spécifié
-    if [[ $result == *"Fatal error: exception Stdlib.Parsing.Parse_error"* ]]; then
+    # Extraire la sortie standard et la sortie d'erreur
+    error_output=$(echo "$result" | grep "Fatal error:")
+    standard_output=$(echo "$result" | grep -v "Fatal error:")
+
+    # Vérifier si la sortie d'erreur contient des messages d'erreur
+    if [[ ! -z "$error_output" ]]; then
         # Écrire le résultat en tant que ligne CSV avec "no" pour correct
-        echo "$file, no, \"$result\"" >> "$output_file"
+        echo "$file, no, \"$error_output\"" >> "$output_file"
     else
         # Écrire le résultat en tant que ligne CSV avec "yes" pour correct
-        echo "$file, yes, \"$result\"" >> "$output_file"
+        echo "$file, yes, \"$standard_output\"" >> "$output_file"
     fi
 done
 
