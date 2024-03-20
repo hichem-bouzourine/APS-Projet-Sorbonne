@@ -24,17 +24,29 @@ type value =
 (*-O(output_stream) = Z∗(int list)-*)
 type output_stream = int list
 
+(*-Utils-*)
+
+let get_arg_ident (arg) =   (* <-- inspiré d'un étudiant dans la salle TME *)
+  match arg with 
+  ASTSingleArg (ident,_) -> ident 
+
+let rec get_args_in_string_list (argz) : (string list) =   (* <-- inspiré d'un étudiant dans la salle TME *)
+  match argz with 
+  |  [] -> []
+  |  a::argz' -> 
+      (get_arg_ident a)::(get_args_in_string_list argz')
+
 (*Fonctions primitives*)
 let eval_prim primOp args = 
   match primOp, args with
   (* Opérateurs unaires *)
-  | "not", [InZ n] -> InZ (if n = 0 then 1 else 0)
+  | NOT, [InZ n] -> InZ (if n = 0 then 1 else 0)
   (* Opérateurs binaires *)
-  | "eq", [InZ n1; InZ n2] -> InZ (if n1 = n2 then 1 else 0)
-  | "lt", [InZ n1; InZ n2] -> InZ (if n1 < n2 then 1 else 0)
-  | "add", [InZ n1; InZ n2] -> InZ (n1 + n2)
-  | "sub", [InZ n1; InZ n2] -> InZ (n1 - n2)
-  | "mul", [InZ n1; InZ n2] -> InZ (n1 * n2)
+  | EQ, [InZ n1; InZ n2] -> InZ (if n1 = n2 then 1 else 0)
+  | LT, [InZ n1; InZ n2] -> InZ (if n1 < n2 then 1 else 0)
+  | ADD, [InZ n1; InZ n2] -> InZ (n1 + n2)
+  | SUB, [InZ n1; InZ n2] -> InZ (n1 - n2)
+  | MUL, [InZ n1; InZ n2] -> InZ (n1 * n2)
   (* Gestion des erreurs pour les opérateurs non supportés *)
   | _ -> failwith "Opérateur ou arguments non pris en charge"
 
@@ -53,14 +65,16 @@ let rec eval_expr x env =
       let v1 = eval_expr e1 env in
       if v1 = InZ 1 then eval_expr e2 env else eval_expr e3 env
   (* Cas de l'abstraction de fonction *)
-  | ASTLambdaExpression (args, body) -> InF (body, args, env)
+  | ASTLambdaExpression (args, body) -> 
+    let args_string = get_args_in_string_list(args) in
+    InF (body, args_string, env)
   (* Cas de l'application de fonction *)
   | ASTApp (func, args) -> 
       let func_value = eval_expr func env in
+      let args_values = List.map (fun arg -> eval_expr arg env) args in
         (match func_value with
-        | InPrim _ -> eval_prim func args (* Évaluation des opérateurs unaires et binaires avec eval_prim *)
+        | InPrim op -> eval_prim op args_values (* Évaluation des opérateurs unaires et binaires avec eval_prim *)
         | InF (body, params, env') ->
-            let args_values = List.map (fun arg -> eval_expr arg env) args in
             let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env' params args_values in
             eval_expr body new_env
         | _ -> failwith "Impossible d'appeler une fonction qui n'est pas une fermeture")
@@ -83,14 +97,16 @@ let rec eval_def def env =
       Env.add x result env
   (* Évaluation de la définition FUN *)
   | ASTFun (x, _, args, expr) ->
-      let closure = InF (expr, args, env) in
+    let args_string = get_args_in_string_list(args) in
+    let closure = InF (expr, args_string, env) in
       (* Mise à jour de l'environnement avec la fermeture calculée *)
       Env.add x closure env
   (* Évaluation de la définition FUN REC *)
   | ASTFunRec (x, _, args, expr) ->
-      let recursion = InFR (expr, x, args, env) in
-      (* Mise à jour de l'environnement avec la fermeture récursive calculée *)
-      Env.add x recursion env
+    let args_string = get_args_in_string_list(args) in
+    let recursion = InFR (expr, x, args_string, env) in
+    (* Mise à jour de l'environnement avec la fermeture récursive calculée *)
+    Env.add x recursion env
 
 let rec eval_cmds cmds env flx =
   match cmds with
