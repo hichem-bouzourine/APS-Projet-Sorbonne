@@ -1,4 +1,4 @@
 [
-    CONST a int [x: int, y: int] (add x y);
-    ECHO (a 1 2)
+    FUN f int [x:bool,y:int](if x y 0);
+    ECHO ([b:bool](f b 42) true)
 ]

@@ -1,3 +1,3 @@
 [
-    ECHO (or 0 1)
+    ECHO ( if (or false true) 1 0 )
 ]

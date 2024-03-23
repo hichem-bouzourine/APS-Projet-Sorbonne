@@ -1,3 +1,4 @@
-[ 
-    ECHO (add 42 (add x 42)) 
+[   
+    CONST x int 10 ;
+    ECHO (add x (add x 10)) 
 ]

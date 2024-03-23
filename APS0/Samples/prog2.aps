@@ -1,3 +1,2 @@
-[ 
-    ECHO (add x 42) 
-]
+[ CONST hichem int 21;
+  ECHO (add hichem 1) ]

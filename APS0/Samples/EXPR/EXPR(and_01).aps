@@ -1,3 +1,1 @@
-[
-    ECHO (and 0 1)
-]
+[ ECHO (if (and false true) 10 11) ]

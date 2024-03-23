@@ -1,3 +1,2 @@
-[ 
-    ECHO x
-]
+[ CONST x int 20; ECHO x ]
+

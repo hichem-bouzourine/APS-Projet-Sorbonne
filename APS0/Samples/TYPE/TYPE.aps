@@ -1,4 +1,4 @@
 [
-    CONST a bool 1;
+    CONST a int 5;
     ECHO a
 ]
