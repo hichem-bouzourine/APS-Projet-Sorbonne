@@ -4,7 +4,7 @@ open Ast
 module Env = Map.Make(String)
   (*update environement Env.add*)
 
-let operators op = 
+let primOp op = 
   match op with
   | "not" -> true
   | "add" -> true
@@ -13,16 +13,16 @@ let operators op =
   | "div" -> true
   | "eq" -> true
   | "lt" -> true
+  | "true" -> true
+  | "false" -> true
   | _ -> false
 
 
 (*-V = Z ⊕ F ⊕ FR-*)
 type value = 
   InZ of int (*-Z = valeurs immediates*)
-  | InF of singleExpr * string list * envi (*-F(InF) = Expr(string) × ident∗(string list) × E(value Env.k)-*)
-  | InFR of singleExpr * string * string list * envi (*-FR(InFR) = Expr(string) × ident(string) × ident∗(string list) × E(value Env.k)-*)
-  | InPrim of string
-  and envi = value Env.t
+  | InF of singleExpr * string list * value Env.t (*-F(InF) = Expr(string) × ident∗(string list) × E(value Env.k)-*)
+  | InFR of singleExpr * string * string list * value Env.t (*-FR(InFR) = Expr(string) × ident(string) × ident∗(string list) × E(value Env.k)-*)
   
 let print_value value = (*TODO: to check*)
   match value with
@@ -38,6 +38,7 @@ type output_stream = int list
 let get_arg_ident (arg) =   (* <-- inspiré d'un étudiant dans la salle TME *)
   match arg with 
   ASTSingleArg (ident,_) -> ident 
+  
 
 let rec get_args_in_string_list (argz) : (string list) =   (* <-- inspiré d'un étudiant dans la salle TME *)
   match argz with 
@@ -56,6 +57,8 @@ let eval_prim primOp args =
   | "add", [InZ n1; InZ n2] -> InZ (n1 + n2)
   | "sub", [InZ n1; InZ n2] -> InZ (n1 - n2)
   | "mul", [InZ n1; InZ n2] -> InZ (n1 * n2)
+  | "true", [] -> InZ 1
+  | "false", [] -> InZ 0
   (* Gestion des erreurs pour les opérateurs non supportés *)
   (*| _ -> failwith (primOp^" Opérateur ou arguments non pris en charge")*)
   | _ -> failwith (" Opérateur ou arguments non pris en charge")
@@ -63,18 +66,20 @@ let eval_prim primOp args =
 let rec eval_expr x env = 
   match x with 
   | ASTNum n -> InZ n (* Construction de la valeur immédiate *)
-  | ASTId id -> (match (operators id) with
-    | true -> InPrim id
+  | ASTId id -> (match (primOp id) with
+    | true -> eval_prim id []
     | false -> (match Env.find_opt id env with 
                 | Some v -> v
                 | None -> failwith (id^" : Variable non définie dans l'environnement")))
   (* Gestion des opérateurs logiques et de contrôle *)
   | ASTAnd (e1, e2) ->
-      let v1 = eval_expr e1 env in
-      if v1 = InZ 1 then eval_expr e2 env else InZ 0
+    let v1 = eval_expr e1 env in
+    let v2 = eval_expr e2 env in
+    if v1 = InZ 1 && v2 = InZ 1 then InZ 1 else InZ 0
   | ASTOr (e1, e2) ->
       let v1 = eval_expr e1 env in
-      if v1 = InZ 1 then InZ 1 else eval_expr e2 env
+      let v2 = eval_expr e2 env in
+      if v1 = InZ 1 || v2 = InZ 1 then InZ 1 else InZ 0
   | ASTIf (e1, e2, e3) ->
       let v1 = eval_expr e1 env in
       if v1 = InZ 1 then eval_expr e2 env else eval_expr e3 env
@@ -84,15 +89,19 @@ let rec eval_expr x env =
     InF (body, args_string, env)
   (* Cas de l'application de fonction *)
   | ASTApp (func, args) -> 
-      let func_value = eval_expr func env in
-      let args_values = List.map (fun arg -> eval_expr arg env) args in
-        (match func_value with
-        | InPrim op -> eval_prim op args_values (* Évaluation des opérateurs unaires et binaires avec eval_prim *)
-        | InF (body, params, env') ->
-            let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env' params args_values in
-            eval_expr body new_env
-        (*| _ -> failwith (func_value^" Impossible d'appeler une fonction qui n'est pas une fermeture"))*)
-        | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture"))
+    let func_value = eval_expr func env in
+    let args_values = List.map (fun arg -> eval_expr arg env) args in
+    (match func with
+    | ASTId func_id -> 
+        (match (primOp func_id) with
+        | true -> eval_prim func_id args_values  
+        | false ->  (match func_value with
+            | InF (body, params, env') ->
+                let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env' params args_values in
+                eval_expr body new_env
+            | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture")))
+    | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture ou une variable"))
+
   
 
 let rec eval_stat ins env flx = 
