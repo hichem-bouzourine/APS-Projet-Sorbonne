@@ -17,6 +17,12 @@ let primOp op =
   | "false" -> true
   | _ -> false
 
+  let boolOp op = 
+    match op with
+    | "true" -> true
+    | "false" -> true
+    | _ -> false
+
 
 (*-V = Z ⊕ F ⊕ FR-*)
 type value = 
@@ -57,17 +63,22 @@ let eval_prim primOp args =
   | "add", [InZ n1; InZ n2] -> InZ (n1 + n2)
   | "sub", [InZ n1; InZ n2] -> InZ (n1 - n2)
   | "mul", [InZ n1; InZ n2] -> InZ (n1 * n2)
-  | "true", [] -> InZ 1
-  | "false", [] -> InZ 0
+  | "div", [InZ n1; InZ n2] -> InZ (n1 / n2)
   (* Gestion des erreurs pour les opérateurs non supportés *)
-  (*| _ -> failwith (primOp^" Opérateur ou arguments non pris en charge")*)
-  | _ -> failwith (" Opérateur ou arguments non pris en charge")
+  | _ -> failwith (primOp^" Opérateur ou arguments non pris en charge")
+
+  let eval_bool op  = 
+  match op with
+  | "true" -> InZ 1
+  | "false" -> InZ 0
+  (* Gestion des erreurs pour les opérateurs non supportés *)
+  | _ -> failwith (" Opérateur bool non pris en charge")
 
 let rec eval_expr x env = 
   match x with 
   | ASTNum n -> InZ n (* Construction de la valeur immédiate *)
-  | ASTId id -> (match (primOp id) with
-    | true -> eval_prim id []
+  | ASTId id -> (match (boolOp id) with
+    | true -> eval_bool id
     | false -> (match Env.find_opt id env with 
                 | Some v -> v
                 | None -> failwith (id^" : Variable non définie dans l'environnement")))
@@ -89,13 +100,13 @@ let rec eval_expr x env =
     InF (body, args_string, env)
   (* Cas de l'application de fonction *)
   | ASTApp (func, args) -> 
-    let func_value = eval_expr func env in
-    let args_values = List.map (fun arg -> eval_expr arg env) args in
     (match func with
     | ASTId func_id -> 
+      let args_values = List.map (fun arg -> eval_expr arg env) args in
         (match (primOp func_id) with
-        | true -> eval_prim func_id args_values  
-        | false ->  (match func_value with
+        | true -> eval_prim func_id args_values
+        | false -> let func_value = eval_expr func env in 
+          (match func_value with
             | InF (body, params, env') ->
                 let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env' params args_values in
                 eval_expr body new_env
@@ -150,7 +161,18 @@ let fname = Sys.argv.(1) in
 let ic = open_in fname in
 try
   let lexbuf = Lexing.from_channel ic in
-  let p = Parser.prog Lexer.token lexbuf in
+  let p =
+    try
+      Parser.prog Lexer.token lexbuf
+    with
+    | Parsing.Parse_error ->
+        let open Lexing in
+        let curr = lexbuf.lex_curr_p in
+        let line = curr.pos_lnum in
+        let cnum = curr.pos_cnum - curr.pos_bol in
+        Printf.printf "Erreur de syntaxe à la ligne %d, colonne %d\n" line cnum;
+        exit 1
+  in
   let _ = eval_prog p in
   Printf.printf "Evaluation terminée avec succès.\n"
 with
