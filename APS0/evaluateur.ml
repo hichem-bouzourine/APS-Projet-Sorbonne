@@ -4,27 +4,31 @@ open Ast
 module Env = Map.Make(String)
   (*update environement Env.add*)
 
-  type primOp =    (* <-- inspiré d'un étudiant dans la salle TME que je remercie pour son aide*)
-  | NOT
-  | EQ 
-  | LT 
-  | ADD 
-  | SUB 
-  | MUL 
-  | DIV 
+let operators op = 
+  match op with
+  | "not" -> true
+  | "add" -> true
+  | "mul" -> true
+  | "sub" -> true
+  | "div" -> true
+  | "eq" -> true
+  | "lt" -> true
+  | _ -> false
 
 
 (*-V = Z ⊕ F ⊕ FR-*)
 type value = 
   InZ of int (*-Z = valeurs immediates*)
-  | InF of singleExpr * string list * value Env.t (*-F(InF) = Expr(string) × ident∗(string list) × E(value Env.k)-*)
-  | InFR of singleExpr * string * string list * value Env.t (*-FR(InFR) = Expr(string) × ident(string) × ident∗(string list) × E(value Env.k)-*)
-  | InPrim of primOp
+  | InF of singleExpr * string list * envi (*-F(InF) = Expr(string) × ident∗(string list) × E(value Env.k)-*)
+  | InFR of singleExpr * string * string list * envi (*-FR(InFR) = Expr(string) × ident(string) × ident∗(string list) × E(value Env.k)-*)
+  | InPrim of string
+  and envi = value Env.t
   
 let print_value value = (*TODO: to check*)
   match value with
     InZ(n) -> Printf.printf "%d\n" n
-  | _ -> failwith "Can't print non integer type"
+  | _ -> failwith (" Can't print non integer type")
+  (*| _ -> failwith (value^" Can't print non integer type")*)
 
 (*-O(output_stream) = Z∗(int list)-*)
 type output_stream = int list
@@ -45,20 +49,25 @@ let rec get_args_in_string_list (argz) : (string list) =   (* <-- inspiré d'un 
 let eval_prim primOp args = 
   match primOp, args with
   (* Opérateurs unaires *)
-  | NOT, [InZ n] -> InZ (if n = 0 then 1 else 0)
+  | "not", [InZ n] -> InZ (if n = 0 then 1 else 0)
   (* Opérateurs binaires *)
-  | EQ, [InZ n1; InZ n2] -> InZ (if n1 = n2 then 1 else 0)
-  | LT, [InZ n1; InZ n2] -> InZ (if n1 < n2 then 1 else 0)
-  | ADD, [InZ n1; InZ n2] -> InZ (n1 + n2)
-  | SUB, [InZ n1; InZ n2] -> InZ (n1 - n2)
-  | MUL, [InZ n1; InZ n2] -> InZ (n1 * n2)
+  | "eq", [InZ n1; InZ n2] -> InZ (if n1 = n2 then 1 else 0)
+  | "lt", [InZ n1; InZ n2] -> InZ (if n1 < n2 then 1 else 0)
+  | "add", [InZ n1; InZ n2] -> InZ (n1 + n2)
+  | "sub", [InZ n1; InZ n2] -> InZ (n1 - n2)
+  | "mul", [InZ n1; InZ n2] -> InZ (n1 * n2)
   (* Gestion des erreurs pour les opérateurs non supportés *)
-  | _ -> failwith "Opérateur ou arguments non pris en charge"
+  (*| _ -> failwith (primOp^" Opérateur ou arguments non pris en charge")*)
+  | _ -> failwith (" Opérateur ou arguments non pris en charge")
 
 let rec eval_expr x env = 
   match x with 
   | ASTNum n -> InZ n (* Construction de la valeur immédiate *)
-  | ASTId id -> (try Env.find id env with Not_found -> failwith "Variable non définie dans l'environnement")
+  | ASTId id -> (match (operators id) with
+    | true -> InPrim id
+    | false -> (match Env.find_opt id env with 
+                | Some v -> v
+                | None -> failwith (id^" : Variable non définie dans l'environnement")))
   (* Gestion des opérateurs logiques et de contrôle *)
   | ASTAnd (e1, e2) ->
       let v1 = eval_expr e1 env in
@@ -82,10 +91,11 @@ let rec eval_expr x env =
         | InF (body, params, env') ->
             let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env' params args_values in
             eval_expr body new_env
-        | _ -> failwith "Impossible d'appeler une fonction qui n'est pas une fermeture")
+        (*| _ -> failwith (func_value^" Impossible d'appeler une fonction qui n'est pas une fermeture"))*)
+        | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture"))
   
 
-let rec eval_stat ins flx env = 
+let rec eval_stat ins env flx = 
   match ins with
   (* Évaluation de l'instruction ECHO *)
   | ASTEcho expr ->
@@ -102,13 +112,13 @@ let rec eval_def def env =
       Env.add x result env
   (* Évaluation de la définition FUN *)
   | ASTFun (x, _, args, expr) ->
-    let args_string = get_args_in_string_list(args) in
+    let args_string = get_args_in_string_list args in
     let closure = InF (expr, args_string, env) in
       (* Mise à jour de l'environnement avec la fermeture calculée *)
       Env.add x closure env
   (* Évaluation de la définition FUN REC *)
   | ASTFunRec (x, _, args, expr) ->
-    let args_string = get_args_in_string_list(args) in
+    let args_string = get_args_in_string_list args in
     let recursion = InFR (expr, x, args_string, env) in
     (* Mise à jour de l'environnement avec la fermeture récursive calculée *)
     Env.add x recursion env
@@ -119,14 +129,11 @@ let rec eval_cmds cmds env flx =
           let new_env = eval_def def env in
           eval_cmds more_cmds new_env flx
       | ASTStat stat ->
-          (*let new_flx = eval_stat stat flx env in*)
-          eval_stat stat flx env
-
+          eval_stat stat env flx  (* Pass environment to evaluate statements *)
 
 let rec eval_prog p =
   let final_output = eval_cmds p Env.empty [] in
   List.iter (function x -> print_value x) (List.rev final_output) 
-  
 
 ;;
 
