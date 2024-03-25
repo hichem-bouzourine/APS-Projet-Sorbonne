@@ -49,8 +49,8 @@ let get_arg_ident (arg) =   (* <-- inspiré d'un étudiant dans la salle TME *)
 let rec get_args_in_string_list (argz) : (string list) =   (* <-- inspiré d'un étudiant dans la salle TME *)
   match argz with 
   |  [] -> []
-  |  a::argz' -> 
-      (get_arg_ident a)::(get_args_in_string_list argz')
+  |  a::argz2 -> 
+      (get_arg_ident a)::(get_args_in_string_list argz2)
 
 (*Fonctions primitives*)
 let eval_prim primOp args = 
@@ -96,8 +96,7 @@ let rec eval_expr x env =
       if v1 = InZ 1 then eval_expr e2 env else eval_expr e3 env
   (* Cas de l'abstraction de fonction *)
   | ASTLambdaExpression (args, body) -> 
-    let args_string = get_args_in_string_list(args) in
-    InF (body, args_string, env)
+    let xs = List.map (fun (ASTSingleArg (x,t))-> x) args in InF(body,xs,env)
   (* Cas de l'application de fonction *)
   | ASTApp (func, args) -> 
     (match func with
@@ -107,11 +106,15 @@ let rec eval_expr x env =
         | true -> eval_prim func_id args_values
         | false -> let func_value = eval_expr func env in 
           (match func_value with
-            | InF (body, params, env') ->
-                let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env' params args_values in
+            | InF (body, params, env2) ->
+                let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env2 params args_values in
                 eval_expr body new_env
+            | InFR (body, func_name, params, env2) -> (* Change here *)
+                let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env2 params args_values in
+                eval_expr body (Env.add func_name func_value new_env) (* Pass the function name and its closure *)
             | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture")))
     | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture ou une variable"))
+
 
   
 
