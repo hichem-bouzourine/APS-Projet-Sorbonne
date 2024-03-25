@@ -1,4 +1,4 @@
-type possibleType = Int | Bool | Void
+type possibleType = Int | Bool | Void (* type void n'existe pas dans le formulaire mais le prof nous a dit qu'il faut l'ajouter *)
 
 type singleType = 
   Type of possibleType 

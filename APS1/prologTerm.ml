@@ -4,7 +4,7 @@ let rec print_singleType stype =
   match stype with
   | Type(Bool)-> Printf.printf "bool"
   | Type(Int)-> Printf.printf "int"
-  | Type(Void)-> Printf.printf "void"
+  | Type(Void)-> Printf.printf "void" (* type void n'existe pas dans le formulaire mais le prof nous a dit qu'il faut l'ajouter *)
   | TypeFun(types, t) -> (
     Printf.printf "funType";
     Printf.printf "(";
