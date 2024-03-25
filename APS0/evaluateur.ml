@@ -4,6 +4,8 @@ open Ast
 module Env = Map.Make(String)
   (*update environement Env.add*)
 
+(*-Utils-*)
+
 let primOpCheck op = 
   match op with
   | ASTId("not") -> true
@@ -30,23 +32,21 @@ type value =
   | InF of singleExpr * string list * value Env.t (*-F(InF) = Expr(string) × ident∗(string list) × E(value Env.k)-*)
   | InFR of singleExpr * string * string list * value Env.t (*-FR(InFR) = Expr(string) × ident(string) × ident∗(string list) × E(value Env.k)-*)
   
-let print_value value = (*TODO: to check*)
+let print_value value = 
   match value with
     InZ(n) -> Printf.printf "%d\n" n
-  | _ -> failwith (" Can't print non integer type")
-  (*| _ -> failwith (value^" Can't print non integer type")*)
+  | _ -> failwith ("Type non entier")
+  (*| _ -> failwith (value^" Type non entier")*)
 
 (*-O(output_stream) = Z∗(int list)-*)
 type output_stream = int list
 
-(*-Utils-*)
-
-let get_arg_ident (arg) =   (* <-- inspiré d'un étudiant dans la salle TME *)
+let get_arg_ident (arg) =   (* <-- fait grace a l'aide d'un camarade dans la salle TME *)
   match arg with 
   ASTSingleArg (ident,_) -> ident 
   
 
-let rec get_args_in_string_list (argz) : (string list) =   (* <-- inspiré d'un étudiant dans la salle TME *)
+let rec get_args_in_string_list (argz) : (string list) =   (* <-- fait grace a l'aide d'un camarade dans la salle TME *)
   match argz with 
   |  [] -> []
   |  a::argz2 -> 
@@ -64,19 +64,17 @@ let eval_prim op args =
   | ASTId("sub"), [InZ n1; InZ n2] -> InZ (n1 - n2)
   | ASTId("mul"), [InZ n1; InZ n2] -> InZ (n1 * n2)
   | ASTId("div"), [InZ n1; InZ n2] -> InZ (n1 / n2)
-  (* Gestion des erreurs pour les opérateurs non supportés *)
   | _ -> failwith ("Opérateur ou arguments non pris en charge")
 
   let eval_bool op  = 
   match op with
   | "true" -> InZ 1
   | "false" -> InZ 0
-  (* Gestion des erreurs pour les opérateurs non supportés *)
   | _ -> failwith (" Opérateur bool non pris en charge")
 
 let rec eval_expr x env = 
   match x with 
-  | ASTNum n -> InZ n (* Construction de la valeur immédiate *)
+  | ASTNum n -> InZ n 
   | ASTId id -> (match (boolOp id) with
     | true -> eval_bool id
     | false -> (match Env.find_opt id env with 
@@ -146,7 +144,7 @@ let rec eval_cmds cmds env flx =
           let new_env = eval_def def env in
           eval_cmds more_cmds new_env flx
       | ASTStat stat ->
-          eval_stat stat env flx  (* Pass environment to evaluate statements *)
+          eval_stat stat env flx  
 
 let rec eval_prog p =
   let final_output = eval_cmds p Env.empty [] in
