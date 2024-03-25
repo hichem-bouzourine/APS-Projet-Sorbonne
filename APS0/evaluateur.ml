@@ -4,17 +4,17 @@ open Ast
 module Env = Map.Make(String)
   (*update environement Env.add*)
 
-let primOp op = 
+let primOpCheck op = 
   match op with
-  | "not" -> true
-  | "add" -> true
-  | "mul" -> true
-  | "sub" -> true
-  | "div" -> true
-  | "eq" -> true
-  | "lt" -> true
-  | "true" -> true
-  | "false" -> true
+  | ASTId("not") -> true
+  | ASTId("add") -> true
+  | ASTId("mul") -> true
+  | ASTId("sub") -> true
+  | ASTId("div") -> true
+  | ASTId("eq") -> true
+  | ASTId("lt") -> true
+  | ASTId("true") -> true
+  | ASTId("false") -> true
   | _ -> false
 
   let boolOp op = 
@@ -53,19 +53,19 @@ let rec get_args_in_string_list (argz) : (string list) =   (* <-- inspiré d'un 
       (get_arg_ident a)::(get_args_in_string_list argz2)
 
 (*Fonctions primitives*)
-let eval_prim primOp args = 
-  match primOp, args with
+let eval_prim op args = 
+  match op, args with
   (* Opérateurs unaires *)
-  | "not", [InZ n] -> InZ (if n = 0 then 1 else 0)
+  | ASTId("not"), [InZ n] -> InZ (if n = 0 then 1 else 0)
   (* Opérateurs binaires *)
-  | "eq", [InZ n1; InZ n2] -> InZ (if n1 = n2 then 1 else 0)
-  | "lt", [InZ n1; InZ n2] -> InZ (if n1 < n2 then 1 else 0)
-  | "add", [InZ n1; InZ n2] -> InZ (n1 + n2)
-  | "sub", [InZ n1; InZ n2] -> InZ (n1 - n2)
-  | "mul", [InZ n1; InZ n2] -> InZ (n1 * n2)
-  | "div", [InZ n1; InZ n2] -> InZ (n1 / n2)
+  | ASTId("eq"), [InZ n1; InZ n2] -> InZ (if n1 = n2 then 1 else 0)
+  | ASTId("lt"), [InZ n1; InZ n2] -> InZ (if n1 < n2 then 1 else 0)
+  | ASTId("add"), [InZ n1; InZ n2] -> InZ (n1 + n2)
+  | ASTId("sub"), [InZ n1; InZ n2] -> InZ (n1 - n2)
+  | ASTId("mul"), [InZ n1; InZ n2] -> InZ (n1 * n2)
+  | ASTId("div"), [InZ n1; InZ n2] -> InZ (n1 / n2)
   (* Gestion des erreurs pour les opérateurs non supportés *)
-  | _ -> failwith (primOp^" Opérateur ou arguments non pris en charge")
+  | _ -> failwith ("Opérateur ou arguments non pris en charge")
 
   let eval_bool op  = 
   match op with
@@ -99,11 +99,9 @@ let rec eval_expr x env =
     let xs = List.map (fun (ASTSingleArg (x,t))-> x) args in InF(body,xs,env)
   (* Cas de l'application de fonction *)
   | ASTApp (func, args) -> 
-    (match func with
-    | ASTId func_id -> 
-      let args_values = List.map (fun arg -> eval_expr arg env) args in
-        (match (primOp func_id) with
-        | true -> eval_prim func_id args_values
+    let args_values = List.map (fun arg -> eval_expr arg env) args in
+    (match (primOpCheck func) with
+        | true -> eval_prim func args_values
         | false -> let func_value = eval_expr func env in 
           (match func_value with
             | InF (body, params, env2) ->
@@ -113,10 +111,6 @@ let rec eval_expr x env =
                 let new_env = List.fold_left2 (fun acc param arg_value -> Env.add param arg_value acc) env2 params args_values in
                 eval_expr body (Env.add func_name func_value new_env) (* Pass the function name and its closure *)
             | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture")))
-    | _ -> failwith (" Impossible d'appeler une fonction qui n'est pas une fermeture ou une variable"))
-
-
-  
 
 let rec eval_stat ins env flx = 
   match ins with

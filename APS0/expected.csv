@@ -2,7 +2,7 @@ sample path, expected
 Samples/CMDS/CMDS(end).aps, 42
 Samples/TYPE/TYPE.aps, 5
 Samples/TYPE/TYPES.aps, 43 
-Samples/ER(2023_3).aps, 3
+Samples/ER(2023_3).aps, 5
 Samples/prog7.aps, 5
 Samples/DEF/DEF(const).aps, 3
 Samples/DEF/DEF(funRec).aps, 6

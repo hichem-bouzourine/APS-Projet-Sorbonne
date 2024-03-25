@@ -3,7 +3,7 @@ Samples/CMDS/CMDS(defs).aps, yes, 1,  1
 Samples/CMDS/CMDS(end).aps, yes, 42,  42
 Samples/TYPE/TYPE.aps, yes, 5,  5
 Samples/TYPE/TYPES.aps, yes, 43,  43 
-Samples/ER(2023_3).aps, no, 5,  3
+Samples/ER(2023_3).aps, yes, 5,  5
 Samples/prog7.aps, yes, 5,  5
 Samples/DEF/DEF(const).aps, yes, 3,  3
 Samples/DEF/DEF(funRec).aps, yes, 6,  6
@@ -31,8 +31,8 @@ Samples/EXPR/EXPR(and_10).aps, yes, 11,  11
 Samples/EXPR/EXPR(lt_1).aps, yes, 1,  1
 Samples/EXPR/EXPR(and_00).aps, yes, 11,  11
 Samples/EXPR/EXPR(eq_0).aps, yes, 0,  0
-Samples/EXPR/EXPR(abs).aps, no, Fatal error: exception Failure(" Impossible d'appeler une fonction qui n'est pas une fermeture ou une variable"),  42
-Samples/prog9.aps, no, Fatal error: exception Failure(" Impossible d'appeler une fonction qui n'est pas une fermeture ou une variable"),  2
+Samples/EXPR/EXPR(abs).aps, yes, 42,  42
+Samples/prog9.aps, yes, 2,  2
 Samples/prog10.aps, yes, 56,  56
 Samples/ER(2023_1).aps, yes, 5,  5
 Samples/ER(2024_1).aps, yes, 3,  3
