@@ -103,7 +103,7 @@ and print_stat s =
       print_singleExpr(e);
       Printf.printf ")")
   | ASTSet (ident, expr) -> 
-      Printf.printf "Set";
+      Printf.printf "set";
       Printf.printf "(";
       Printf.printf "id(%s)" ident;
       Printf.printf ",";
