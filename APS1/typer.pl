@@ -35,6 +35,10 @@ g0([
 /* Programme */
     /* (PROG) */
 type_prog(G,prog(X),void):-
+    type_bloc(G,X,void).
+
+/* Bloc */
+type_bloc(G,block(X),void):-
     type_cmds(G,X,void).
 
 /* Suite de commandes */
@@ -73,12 +77,43 @@ type_def(G,funRec(FUN,T,ARGUMENTS,E),GI):-
     G3 = [(FUN,funType(TYPEIS,T))|G2],
 	type_expr(G3,E,T),
 	GI=[(FUN,funType(TYPEIS,T))|G]. 
+    /* (VAR) */
+type_def(G,var(X,T),[(X,T)| G]).
+    /* (PROC) */
+type_def(G,proc(PROCEDURE,ARGUMENTS,E),GI):-
+    append(ARGUMENTS,G,G2),
+    type_bloc(G2,E,void),
+    recupererTypeArgs(ARGUMENTS,TYPEIS),
+    GI=[(PROCEDURE,funType(TYPEIS,void))|G].
+    /* (PROCREC) */
+type_def(G,procRec(PROCEDURE,ARGUMENTS,E),GI):-
+    recupererTypeArgs(ARGUMENTS,TYPEIS),
+	append(ARGUMENTS,G,G2), 
+    G3 =[(PROCEDURE,typeFunc(TYPEIS,T))|G2],
+	type_bloc(G3,E,T),
+	GI=[(PROCEDURE,typeFunc(TYPEIS,T))|G].
 
 /* Intruction */
     /* (ECHO) */
 type_stat(G,echo(E),void) :-
 	type_expr(G,E,int).	
-
+    /* (SET) */
+type_stat(G,set(id(X),E),void):-
+    type_expr(G,id(X),T),
+    type_expr(G,E,T).
+    /* (IF) */
+type_stat(G,if(E1,E2,E3),void) :-
+    type_expr(G,E1,bool),
+    type_bloc(G,E2,void),
+    type_bloc(G,E3,void).
+    /* (WHILE) */
+type_stat(G,while(C,E),void) :-
+    type_expr(G,C,bool),
+    type_bloc(G,E,void).
+    /* (CALL) */
+type_stat(G,call(X,ARGUMENTS),void) :-
+    type_expr(G,X,funType(ARGSTYPE,void)),
+    check_args(G,ARGUMENTS,ARGSTYPE).
 /* Expressions */
     /* (NUM) */
 type_expr(_,num(N),int) :-
