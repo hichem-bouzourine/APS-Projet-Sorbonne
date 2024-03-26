@@ -49,8 +49,8 @@ Samples/prog3.aps, yes, Bien typé.
 Samples/prog10.aps, yes, Bien typé.
 Samples/prog9.aps, yes, Bien typé.
 Samples/prog1.aps, yes, Bien typé.
-Samples/DEF/DEF(ProcRec).aps, no, Erreur de typage !!!
-Samples/DEF/DEF(proc).aps, no, Erreur de typage !!!
+Samples/DEF/DEF(ProcRec).aps, yes, Bien typé.
+Samples/DEF/DEF(proc).aps, yes, Bien typé.
 Samples/DEF/DEF(const).aps, yes, Bien typé.
 Samples/DEF/DEF(VAR).aps, yes, Bien typé.
 Samples/DEF/DEF(fun).aps, yes, Bien typé.
