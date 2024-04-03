@@ -35,6 +35,11 @@ rule token = parse
   | "bool"           { BOOL }
   | "int"            { INT }
   | "adr"            { ADR }
+  | "vec"            { VEC }
+  | "alloc"          { ALLOC }
+  | "len"            { LEN }
+  | "nth"            { NTH }
+  | "vset"            { VSET }
   (*Constantes numeriques*)
   | ['0'-'9']+('.'['0'-'9'])? as lxm { NUM(int_of_string lxm) }
   (*Identificateurs*)

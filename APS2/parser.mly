@@ -12,6 +12,7 @@ open Ast
 %token BOOL INT
 %token VAR
 %token ADR VARADR
+%token VEC ALLOC NTH LEN VSET // APS2
 %token <int> NUM
 %token <string> IDENT
 
@@ -50,21 +51,26 @@ def:
   | CONST IDENT singleType singleExpr { ASTConst($2, $3, $4) }
   | FUN IDENT singleType LBRA args RBRA singleExpr  { ASTFun($2, $3, $5, $7) }
   | FUN REC IDENT singleType LBRA args RBRA singleExpr { ASTFunRec($3, $4, $6, $8) } 
-  | VAR IDENT singleType { ASTVar($2, $3) }
+  | VAR IDENT sTypes { ASTVar($2, $3) }
   | PROC IDENT LBRA argsProc RBRA block  { ASTProc($2, $4, $6) }
   | PROC REC IDENT LBRA argsProc RBRA block { ASTProcRec($3, $5, $7) } 
 ;
 
 singleType:
-  | INT { Type(Int) }
-  | BOOL { Type(Bool) }  
-  | VOID { Type(Void) }  
+  | sTypes  {[$1]}
   | LPAR types ARROW singleType RPAR { TypeFun($2, $4) }
 ;
 types:
   | singleType { [$1] }
   | singleType STAR types { $1::$3 }
 ;
+
+sTypes:
+  | INT {Type(Int)}
+  | BOOL {Type(Bool)}
+  | VOID { Type(Void) }  
+  | LPAR VEC sTypes RPAR {ASTVectorType($3)}
+
 
 singleArg: 
   | IDENT COL singleType { ASTSingleArg($1, $3) }
@@ -84,11 +90,15 @@ argsProc:
 
 stat:
   | ECHO singleExpr { ASTEcho($2) }
-  | SET IDENT singleExpr { ASTSet($2, $3) }
+  | SET lValue singleExpr { ASTSet($2, $3) }
   | IF singleExpr block block { ASTIf($2, $3, $4) }
   | WHILE singleExpr block { ASTWhile($2, $3) }
   | CALL IDENT exprsProc { ASTCall($2, $3) }
 ;
+
+lValue:
+  | IDENT {ASTLValueIdent($1)}
+  | LPAR NTH lValue singleExpr RPAR {ASTVectorValue($3, $4)}
 
 exprProc:
   | singleExpr            {ASTExpr($1)}
@@ -96,9 +106,7 @@ exprProc:
 
 exprsProc:
   | exprProc          {[$1]}
-  | exprProc exprsProc { $1::$2 } // Comma optionnelle au milieu
-
-  
+  | exprProc exprsProc { $1::$2 }
 
 singleExpr:
   | NUM { ASTNum($1) }
@@ -108,6 +116,10 @@ singleExpr:
   | LPAR OR singleExpr singleExpr RPAR { ASTOr($3, $4) }
   | LPAR singleExpr exprs RPAR { ASTApp($2, $3) }
   | LBRA args RBRA singleExpr { ASTLambdaExpression($2, $4) }
+  | LPAR ALLOC singleExpr RPAR {ASTAlloc($3)}
+  | LPAR LEN singleExpr RPAR {ASTLen($3)}
+  | LPAR NTH singleExpr singleExpr RPAR {ASTNth($3, $4)}
+  | LPAR VSET singleExpr singleExpr singleExpr RPAR {ASTVset($3, $4, $5)}
 ;
 
 exprs :
