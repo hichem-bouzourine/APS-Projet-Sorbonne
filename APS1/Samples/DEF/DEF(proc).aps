@@ -1,5 +1,4 @@
 [
-    CONST x int 5;
-    PROC hichem [x:int, y:int] [ECHO (add x y)];
-    ECHO x
+    PROC t [x: int] [ ECHO x ];
+    CALL t 50
 ]
