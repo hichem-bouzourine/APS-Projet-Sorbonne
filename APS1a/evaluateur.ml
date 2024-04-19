@@ -187,21 +187,24 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (instruction : stat)
       in
       eval_while rho sigma omega
   | ASTCall (proc_name, exprsProc) ->
-      let evaluated_args = List.map (eval_exprProc rho sigma) exprsProc in
-      (match Hashtbl.find_opt rho proc_name with
-       | Some (InP (cmds, proc_args, proc_env)) ->
-           let new_env = List.fold_left2 (fun acc_env (ASTSingleArgProc(name, _) | ASTSingleArgProcVar(name, _)) arg_value ->
-               Hashtbl.add acc_env name arg_value; acc_env) (Hashtbl.copy proc_env) proc_args evaluated_args in
-           let _, new_omega = eval_block new_env sigma omega (ASTBlock cmds) in
-           (sigma, new_omega)
-       | Some (InPR (cmds, rec_proc_name, proc_args, proc_env)) ->
-           let rec_env_with_self = Hashtbl.copy proc_env in
-           Hashtbl.add rec_env_with_self rec_proc_name (InPR (cmds, rec_proc_name, proc_args, rec_env_with_self));
-           let new_env = List.fold_left2 (fun acc_env (ASTSingleArgProc(name, _) | ASTSingleArgProcVar(name, _)) arg_value ->
-               Hashtbl.add acc_env name arg_value; acc_env) rec_env_with_self proc_args evaluated_args in
-           let _, new_omega = eval_block new_env sigma omega (ASTBlock cmds) in
-           (sigma, new_omega)
-       | _ -> failwith ("Proc " ^ proc_name ^ " not declared during the call"))
+    (match Hashtbl.find_opt rho proc_name with
+    | Some (InP (cmds, proc_args, proc_env)) | Some (InPR (cmds, _, proc_args, proc_env)) ->
+        let evaluate_arg (proc_arg: singleArgProc) (exprProc: exprProc) : string * value = match proc_arg, exprProc with
+          | ASTSingleArgProcVar(name, _), ASTExprProcAdr id ->
+            (match Hashtbl.find_opt rho id with
+             | Some (InA addr) -> (name, InA addr)
+             | _ -> failwith (id ^ " : Expected a variable address for reference passing"))
+          | ASTSingleArgProc(name, _), ASTExpr e -> (name, eval_expr rho sigma e)
+          | _ -> failwith "Mismatch between procedure argument type and provided argument"
+        in
+        let evaluated_args = List.map2 evaluate_arg proc_args exprsProc in
+        let new_env = List.fold_left (fun acc_env (name, arg_value) ->
+            Hashtbl.add acc_env name arg_value; acc_env)
+            (Hashtbl.copy proc_env) evaluated_args
+        in
+        let _, new_omega = eval_block new_env sigma omega (ASTBlock cmds) in
+        (sigma, new_omega)
+    | _ -> failwith ("Procedure " ^ proc_name ^ " not found"))
 
 and eval_def (rho : env) (sigma : memory) (definition : def) : env * memory =
   match definition with
