@@ -3,8 +3,7 @@
     SET x 5;
     PROC hichem [y:int] [
         SET x 10;
-        ECHO x;
-        ECHO y
+        ECHO (add x y)
     ];
     CALL hichem x
 ]
