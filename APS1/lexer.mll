@@ -38,4 +38,3 @@ rule token = parse
   (*Identificateurs*)
   | ['a'-'z']['a'-'z''A'-'Z''0'-'9']* as lxm { IDENT(lxm) }
   | eof              { raise Eof }
-  | _ as char             { failwith (Printf.sprintf "Caractère non reconnu : '%c'" char) }
