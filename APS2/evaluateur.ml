@@ -97,33 +97,17 @@ let eval_bool op  =
 
 let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * memory =
   match expr with
-  | ASTAlloc e ->
-    let (InZ n, updated_sigma) = eval_expr rho sigma e in
-    let (addr, new_sigma) = allocn updated_sigma n in
-    (InB (addr, n), new_sigma)
-  | ASTVset (e1, e2, e3) ->
-    let (InB (base_addr, _), sigma1) = eval_expr rho sigma e1 in
-    let (InZ index, sigma2) = eval_expr rho sigma1 e2 in
-    let value, sigma3 = eval_expr rho sigma2 e3 in
-    Hashtbl.replace sigma3 (base_addr + index) value;
-    (InB (base_addr, index + 1), sigma3)
-  | ASTNth (e1, e2) ->
-    let (InB (base_addr, _), sigma1) = eval_expr rho sigma e1 in
-    let (InZ index, sigma2) = eval_expr rho sigma1 e2 in
-    let value = Hashtbl.find sigma2 (base_addr + index) in
-    (value, sigma2)
-  | ASTLen e ->
-    let (InB (_, size), sigma) = eval_expr rho sigma e in
-    (InZ size, sigma)
   | ASTNum n -> (InZ n, sigma)
   | ASTId id ->
-    (match Hashtbl.find_opt rho id with
-    | Some (InA addr) ->  
-        (match Hashtbl.find_opt sigma addr with
-        | Some value -> (value, sigma)
-        | None -> failwith ("Address " ^ string_of_int addr ^ " not found in memory"))
-    | Some value -> (value, sigma)
-    | None -> failwith (id ^ " : Variable or function not defined in the environment"))  
+    if boolOp id then (eval_bool id, sigma)
+    else 
+      (match Hashtbl.find_opt rho id with
+       | Some (InA addr) ->  
+           (match Hashtbl.find_opt sigma addr with
+            | Some value -> (value, sigma)
+            | None -> failwith ("Address " ^ string_of_int addr ^ " not found in memory"))
+       | Some value -> (value, sigma)
+       | None -> failwith (id ^ " : Variable or function not defined in the environment"))
   | ASTAnd (e1, e2) ->
     let (v1, sigma1) = eval_expr rho sigma e1 in
     let (v2, sigma2) = eval_expr rho sigma1 e2 in
@@ -138,12 +122,12 @@ let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * mem
      | InZ 1, _ | _, InZ 1 -> (InZ 1, sigma2)  
      | InZ 0, InZ 0 -> (InZ 0, sigma2)    
      | _ -> failwith "Non-integer operands for 'or'")
-  | ASTIf (e1, e2, e3) ->
-    let (v1, sigma1) = eval_expr rho sigma e1 in
-    (match v1 with
-     | InZ 1 -> eval_expr rho sigma1 e2
-     | InZ 0 -> eval_expr rho sigma1 e3
-     | _ -> failwith "Non-integer condition in 'if'")
+  | ASTIf (cond, e_true, e_false) ->
+    let (v_cond, sigma_cond) = eval_expr rho sigma cond in
+    (match v_cond with
+     | InZ 1 -> eval_expr rho sigma_cond e_true  
+     | InZ 0 -> eval_expr rho sigma_cond e_false 
+     | _ -> failwith "Non-boolean condition in 'if'")
   | ASTLambdaExpression (args, body) ->
     let xs = List.map (fun (ASTSingleArg (x, _)) -> x) args in
     (InF (body, xs, rho), sigma)
@@ -177,6 +161,39 @@ let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * mem
              (Hashtbl.copy rho) params args_values in
          eval_expr new_rho updated_sigma body_lambda
      | _ -> failwith "Function calls with complex expressions as functions not supported")
+  | ASTAlloc e ->
+      let (value, updated_sigma) = eval_expr rho sigma e in
+      (match value with
+      | InZ n ->
+          let (addr, new_sigma) = allocn updated_sigma n in
+          (InB (addr, n), new_sigma)
+      | _ -> failwith "ASTAlloc expected an integer result")
+  | ASTVset (e1, e2, e3) ->
+      let (vec, sigma1) = eval_expr rho sigma e1 in
+      let (index, sigma2) = eval_expr rho sigma1 e2 in
+      let (new_val, sigma3) = eval_expr rho sigma2 e3 in
+      (match vec, index with
+      | InB (base_addr, size), InZ idx when idx >= 0 && idx < size ->
+          Hashtbl.replace sigma3 (base_addr + idx) new_val;
+          (InZ 0, sigma3)
+      | _ -> failwith "ASTVset: Invalid vector or index")
+  | ASTLen e ->
+    let (vec_val, sigma_after_vec) = eval_expr rho sigma e in
+    (match vec_val with
+     | InB (_, size) -> (InZ size, sigma_after_vec)
+     | _ -> failwith "ASTLen: Argument is not a vector")
+  | ASTNth (e1, e2) ->
+    let (vec, sigma1) = eval_expr rho sigma e1 in
+    let (index_val, sigma2) = eval_expr rho sigma1 e2 in
+    match vec, index_val with
+    | InB (base_addr, _), InZ index ->
+        if index >= 0 then
+          let value = Hashtbl.find sigma2 (base_addr + index) in
+          (value, sigma2)
+        else
+          failwith "ASTNth: Index out of bounds"
+    | _, InZ _ -> failwith "ASTNth: First argument must be a vector"
+    | _, _ -> failwith "ASTNth: Index must be an integer"
 
 
 and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
@@ -221,17 +238,17 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (stat : stat) : memo
         (sigma, new_omega)
     | _ -> failwith ("Procedure " ^ proc_name ^ " not found"))
   | ASTWhile (cond, block) ->
-      let rec loop sigma' =
-        let (condValue, sigma'') = eval_expr rho sigma' cond in
-        match condValue with
-        | InZ 0 -> sigma''  
-        | InZ _ ->
-            let (_, new_omega) = eval_block rho sigma'' omega block in
-            loop sigma''  
-        | _ -> failwith "Condition of WHILE not boolean"
-      in
-      let final_sigma = loop sigma in
-      (final_sigma, omega)
+    let rec loop sigma' omega' =  
+      let (condValue, sigma'') = eval_expr rho sigma' cond in
+      match condValue with
+      | InZ 0 -> (sigma'', omega')
+      | InZ _ ->
+          let (_, omega_loop) = eval_block rho sigma'' omega' block in  
+          loop sigma'' omega_loop 
+      | _ -> failwith "Condition of WHILE not boolean"
+    in
+    let (final_sigma, final_omega) = loop sigma omega in  
+    (final_sigma, final_omega) 
   | ASTSet (lval, expr) ->
       let id = eval_lvalue_to_string lval in
       (match Hashtbl.find_opt rho id with
