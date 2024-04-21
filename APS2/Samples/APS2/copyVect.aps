@@ -1,1 +1,18 @@
+<<<<<<< HEAD
 [ CONST src (vec int) (alloc 3); SET (nth src 0) 7; SET (nth src 1) 8; SET (nth src 2) 9; CONST dest (vec int) (alloc (len src)); VAR i int; SET i 0; WHILE (lt i (len src)) [ SET (nth dest i) (nth src i); SET i (add i 1) ]; ECHO (nth dest 1) ]
+=======
+[ 
+    CONST src (vec int) (alloc 3); 
+    SET (nth src 0) 7; 
+    SET (nth src 1) 8; 
+    SET (nth src 2) 9; 
+    CONST dest (vec int) (alloc (len src)); 
+    VAR i int; 
+    SET i 0; 
+    WHILE (lt i (len src)) [ 
+        SET (nth dest i) (nth src i); 
+        SET i (add i 1) 
+    ]; 
+    ECHO (nth dest 1) 
+]
+>>>>>>> aps2

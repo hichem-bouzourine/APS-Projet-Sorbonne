@@ -1,12 +1,10 @@
-(*Lexique: string -> lexemes*)
-
 {
   open Parser        (* The type token is defined in parser.mli *)
   exception Eof
 }
 
 rule token = parse
-    [' ' '\t' '\n']       { token lexbuf }     (* skip blanks *)
+  [' ' '\t' '\n' '\r']           { token lexbuf }     (* skip blanks *)
     (*Symboles reserves*)
   | '['              { LBRA }
   | ']'              { RBRA }
@@ -50,4 +48,8 @@ rule token = parse
     let msg = Printf.sprintf "Lexing error: unexpected character '%c' at line %d, position %d" 
                              char pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
     raise (Failure msg)
+<<<<<<< HEAD
   }
+=======
+  }
+>>>>>>> aps2
