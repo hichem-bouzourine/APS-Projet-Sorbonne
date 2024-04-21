@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-
-=======
 [
->>>>>>> aps2
     VAR counter int;
     VAR sum int;
     SET counter 5;

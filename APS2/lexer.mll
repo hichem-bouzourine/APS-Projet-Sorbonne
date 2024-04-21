@@ -48,8 +48,4 @@ rule token = parse
     let msg = Printf.sprintf "Lexing error: unexpected character '%c' at line %d, position %d" 
                              char pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
     raise (Failure msg)
-<<<<<<< HEAD
   }
-=======
-  }
->>>>>>> aps2
