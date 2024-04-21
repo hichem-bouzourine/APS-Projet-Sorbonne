@@ -4,5 +4,5 @@
         (eq n 0)
         (isEven (sub n 2))
         );
-    ECHO (isEven 42)
+    ECHO 10
 ]

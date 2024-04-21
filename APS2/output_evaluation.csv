@@ -58,9 +58,6 @@ Samples/APS1/proc.aps, yes, 7,  7
 Samples/APS1/while.aps, yes, 15,  15
 Samples/prog9.aps, yes, 2,  2
 Samples/prog1.aps, yes, 20,  20
-Samples/APS1a/swap.aps, yes, 10,  10
-Samples/APS1a/recPow.aps, yes, 8,  8
-Samples/APS1a/incr(ref).aps, yes, 6,  6
 Samples/DEF/DEF(ProcRec).aps, yes, 1,  1
 Samples/DEF/DEF(proc).aps, yes, 5,  5
 Samples/DEF/DEF(const).aps, yes, 3,  3

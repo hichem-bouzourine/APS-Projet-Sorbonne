@@ -3,10 +3,13 @@
   [ 
     if (eq n 0) 
       [ SET result 1 ] 
-      [ CALL pow ((adr result), base, (sub n 1)); SET result (mul result base) ] 
+      [ 
+        CALL pow (adr result) base (sub n 1); 
+        SET result (mul result base) 
+      ] 
   ]; 
   VAR res int; 
   SET res 1; 
-  CALL pow ((adr res), 2, 3); 
+  CALL pow (adr res) 2 3; 
   ECHO res
 ]

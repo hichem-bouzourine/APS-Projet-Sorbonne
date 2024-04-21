@@ -1,12 +1,10 @@
-(*Lexique: string -> lexemes*)
-
 {
   open Parser        (* The type token is defined in parser.mli *)
   exception Eof
 }
 
 rule token = parse
-    [' ' '\t' '\n']       { token lexbuf }     (* skip blanks *)
+  [' ' '\t' '\n' '\r']           { token lexbuf }     (* skip blanks *)
     (*Symboles reserves*)
   | '['              { LBRA }
   | ']'              { RBRA }
