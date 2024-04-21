@@ -1,5 +1,5 @@
 sample path, correct (yes/no), result,  expected
-Samples/APS0/isEven.aps, no, 10,  1
+Samples/APS0/isEven.aps, yes, 10,  10
 Samples/APS0/pgcd.aps, yes, 6,  6
 Samples/APS0/fact.aps, yes, 120,  120
 Samples/APS0/pow.aps, yes, 256,  256
