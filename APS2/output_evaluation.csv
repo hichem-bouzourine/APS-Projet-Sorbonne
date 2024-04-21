@@ -35,6 +35,10 @@ Samples/EXPR/EXPR(lt_1).aps, yes, 1,  1
 Samples/EXPR/EXPR(and_00).aps, yes, 11,  11
 Samples/EXPR/EXPR(eq_0).aps, yes, 0,  0
 Samples/EXPR/EXPR(abs).aps, yes, 42,  42
+Samples/APS2/vect.aps, yes, 1,  1
+Samples/APS2/invertTab.aps, no, Fatal error: exception Failure("Index out of bounds in vector assignment"),  
+Samples/APS2/copyVect.aps, yes, 8,  8
+Samples/APS2/maxVec.aps, no, Fatal error: exception Failure("The function gt is not defined in the environment."),  
 Samples/prog9.aps, yes, 2,  2
 Samples/prog10.aps, yes, 56,  56
 Samples/ER(2023_1).aps, yes, 5,  5
@@ -49,11 +53,21 @@ Samples/prog1.aps, yes, 20,  20
 Samples/prog6.aps, yes, 9,  9
 Samples/ER(2023_2).aps, yes, 3,  3
 Samples/APS1a/incr(ref).aps, yes, 6,  6
+Samples/APS1a/recPow.aps, no, Fatal error: exception Failure("Lexing error: unexpected character '' at line 1, position 4"),  8
+Samples/APS1a/swap.aps, no, Syntax error on line 1, column 145,  10
 Samples/prog8.aps, yes, 3,  3
 Samples/ER(2024_2).aps, yes, 6,  6
 Samples/prog4.aps, yes, 100,  100
 Samples/prog3.aps, yes, 30,  30
 Samples/prog0.aps, yes, 42,  42
+Samples/APS0/isEven.aps, yes, 1,  1
+Samples/APS0/fact.aps, yes, 120,  120
+Samples/APS0/pgcd.aps, yes, 6,  6
+Samples/APS0/fib.aps, yes, 55,  55
+Samples/APS0/pow.aps, yes, 256,  256
 Samples/ARG/ARGS.aps, yes, 50,  50
+Samples/APS1/set.aps, no, Fatal error: exception Failure("Lexing error: unexpected character '' at line 1, position 3"),  30
+Samples/APS1/proc.aps, no, Fatal error: exception Failure("Lexing error: unexpected character '' at line 1, position 3"),  7
+Samples/APS1/while.aps, no, Fatal error: exception Failure("Lexing error: unexpected character '' at line 1, position 2"),  15
 Samples/prog2.aps, yes, 22,  22
 Samples/prog5.aps, yes, 2,  2

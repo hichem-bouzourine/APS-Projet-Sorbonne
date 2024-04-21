@@ -1,0 +1,13 @@
+[
+  CONST monvecteur (vec bool) (alloc 2);
+  
+  SET (nth monvecteur 0) true; 
+  SET (nth monvecteur 1) false; 
+  
+  if (nth monvecteur 0) [ 
+    ECHO 1
+  ]
+  [
+    ECHO 0
+  ]
+]

@@ -1,4 +1,4 @@
-sample path, correct (yes/no), result, typage
+sample path, correct (yes/no), result, prologTerm
 Samples/CMDS/CMDS(defs).aps, yes, Bien typé., "prog(block([cmds(const(a,int,num(1))),cmds(const(b,int,num(3))),cmds(fun(f,int,[(x,int),(y,int)],app(id(add),[app(id(mul),[num(42),id(x)]),app(id(sub),[app(id(div),[id(y),num(2)]),num(42)])]))),echo(app(id(f),[id(a),id(b)]))]))."
 Samples/CMDS/CMDS(end).aps, yes, Bien typé., "prog(block([echo(num(42))]))."
 Samples/TYPE/TYPE.aps, yes, Bien typé., "prog(block([cmds(const(a,int,num(5))),echo(id(a))]))."
@@ -52,6 +52,14 @@ Samples/ER(2024_2).aps, yes, Bien typé., "prog(block([cmds(funRec(somme,int,[(n
 Samples/prog4.aps, yes, Bien typé., "prog(block([cmds(const(x,int,num(10))),cmds(const(y,int,num(20))),echo(app(id(add),[app(id(mul),[num(10),id(x)]),app(id(sub),[app(id(div),[id(y),num(2)]),num(10)])]))]))."
 Samples/prog3.aps, yes, Bien typé., "prog(block([cmds(const(x,int,num(10))),echo(app(id(add),[id(x),app(id(add),[id(x),num(10)])]))]))."
 Samples/prog0.aps, yes, Bien typé., "prog(block([echo(num(42))]))."
+Samples/APS0/isEven.aps, no, Erreur de typage !!!, "prog(block([cmds(funRec(isEven,bool,[(n,int)],if(app(id(lt),[id(n),num(2)]),app(id(eq),[id(n),num(0)]),app(id(isEven),[app(id(sub),[id(n),num(2)])])))),echo(app(id(isEven),[num(42)]))]))."
+Samples/APS0/fact.aps, yes, Bien typé., "prog(block([cmds(funRec(fact,int,[(n,int)],if(app(id(eq),[id(n),num(0)]),num(1),app(id(mul),[id(n),app(id(fact),[app(id(sub),[id(n),num(1)])])])))),echo(app(id(fact),[num(5)]))]))."
+Samples/APS0/pgcd.aps, yes, Bien typé., "prog(block([cmds(funRec(pgcd,int,[(a,int),(b,int)],if(app(id(eq),[id(a),id(b)]),id(a),if(app(id(lt),[id(a),id(b)]),app(id(pgcd),[id(a),app(id(sub),[id(b),id(a)])]),app(id(pgcd),[app(id(sub),[id(a),id(b)]),id(b)]))))),echo(app(id(pgcd),[num(48),num(18)]))]))."
+Samples/APS0/fib.aps, yes, Bien typé., "prog(block([cmds(funRec(fib,int,[(n,int)],if(app(id(lt),[id(n),num(2)]),id(n),app(id(add),[app(id(fib),[app(id(sub),[id(n),num(1)])]),app(id(fib),[app(id(sub),[id(n),num(2)])])])))),echo(app(id(fib),[num(10)]))]))."
+Samples/APS0/pow.aps, yes, Bien typé., "prog(block([cmds(funRec(pow,int,[(base,int),(exponent,int)],if(app(id(eq),[id(exponent),num(0)]),num(1),app(id(mul),[id(base),app(id(pow),[id(base),app(id(sub),[id(exponent),num(1)])])])))),echo(app(id(pow),[num(2),num(8)]))]))."
 Samples/ARG/ARGS.aps, yes, Bien typé., "prog(block([cmds(fun(f,int,[(x,int),(y,int)],app(id(add),[app(id(mul),[num(42),id(x)]),app(id(sub),[app(id(div),[id(y),num(2)]),num(42)])]))),echo(app(id(f),[num(1),num(100)]))]))."
+Samples/APS1/set.aps, yes, Bien typé., "prog(block([cmds(var(x,int)),cmds(var(y,int)),set(id(x),num(10)),set(id(y),num(20)),echo(app(id(add),[id(x),id(y)]))]))."
+Samples/APS1/proc.aps, yes, Bien typé., "prog(block([cmds(proc(addTwo,[(x,int)],block([cmds(var(temp,int)),set(id(temp),app(id(add),[id(x),num(2)])),echo(id(temp))]))),cmds(var(value,int)),set(id(value),num(5)),call(id(addTwo),[id(value)])]))."
+Samples/APS1/while.aps, yes, Bien typé., "prog(block([cmds(var(counter,int)),cmds(var(sum,int)),set(id(counter),num(5)),set(id(sum),num(0)),while(app(id(lt),[num(0),id(counter)]),block([set(id(sum),app(id(add),[id(sum),id(counter)])),set(id(counter),app(id(sub),[id(counter),num(1)]))])),echo(id(sum))]))."
 Samples/prog2.aps, yes, Bien typé., "prog(block([cmds(const(hichem,int,num(21))),echo(app(id(add),[id(hichem),num(1)]))]))."
 Samples/prog5.aps, yes, Bien typé., "prog(block([echo(if(id(true),num(2),num(3)))]))."

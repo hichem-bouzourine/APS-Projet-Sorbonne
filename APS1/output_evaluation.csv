@@ -52,6 +52,14 @@ Samples/ER(2024_2).aps, yes, 6,  6
 Samples/prog4.aps, yes, 100,  100
 Samples/prog3.aps, yes, 30,  30
 Samples/prog0.aps, yes, 42,  42
+Samples/APS0/isEven.aps, yes, 1,  1
+Samples/APS0/fact.aps, yes, 120,  120
+Samples/APS0/pgcd.aps, yes, 6,  6
+Samples/APS0/fib.aps, yes, 55,  55
+Samples/APS0/pow.aps, yes, 256,  256
 Samples/ARG/ARGS.aps, yes, 50,  50
+Samples/APS1/set.aps, yes, 30,  30
+Samples/APS1/proc.aps, yes, 7,  7
+Samples/APS1/while.aps, yes, 15,  15
 Samples/prog2.aps, yes, 22,  22
 Samples/prog5.aps, yes, 2,  2

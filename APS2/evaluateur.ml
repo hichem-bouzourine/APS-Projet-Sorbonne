@@ -87,20 +87,26 @@ let eval_prim op args =
   | ASTId("sub"), [InZ n1; InZ n2] -> InZ (n1 - n2)
   | ASTId("mul"), [InZ n1; InZ n2] -> InZ (n1 * n2)
   | ASTId("div"), [InZ n1; InZ n2] -> InZ (n1 / n2)
-  | _ -> failwith ("Unsupported operator or arguments")
+  | ASTId("len"), [InB (_, size)] -> InZ size
+  | ASTId("and"), [InZ n1; InZ n2] -> InZ (if n1 != 0 && n2 != 0 then 1 else 0)
+  | _ ->
+    let op_str = match op with
+                 | ASTId(s) -> s
+                 | _ -> failwith "Expected an operator as an identifier"
+    in
+    failwith ("Unsupported operator or arguments: " ^ op_str)
+  
 
-let eval_bool op  = 
+let eval_bool op = 
   match op with
   | "true" -> InZ 1
   | "false" -> InZ 0
-  | _ -> failwith ("Unsupported bool operator")
+  | _ -> failwith ("Unsupported bool operator: " ^ op)
 
 let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * memory =
   match expr with
-  | ASTNum n -> (InZ n, sigma)
+  | ASTId id when boolOp id -> (eval_bool id, sigma)
   | ASTId id ->
-    if boolOp id then (eval_bool id, sigma)
-    else 
       (match Hashtbl.find_opt rho id with
        | Some (InA addr) ->  
            (match Hashtbl.find_opt sigma addr with
@@ -108,6 +114,7 @@ let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * mem
             | None -> failwith ("Address " ^ string_of_int addr ^ " not found in memory"))
        | Some value -> (value, sigma)
        | None -> failwith (id ^ " : Variable or function not defined in the environment"))
+  | ASTNum n -> (InZ n, sigma)
   | ASTAnd (e1, e2) ->
     let (v1, sigma1) = eval_expr rho sigma e1 in
     let (v2, sigma2) = eval_expr rho sigma1 e2 in
@@ -183,18 +190,16 @@ let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * mem
      | InB (_, size) -> (InZ size, sigma_after_vec)
      | _ -> failwith "ASTLen: Argument is not a vector")
   | ASTNth (e1, e2) ->
-    let (vec, sigma1) = eval_expr rho sigma e1 in
-    let (index_val, sigma2) = eval_expr rho sigma1 e2 in
-    match vec, index_val with
-    | InB (base_addr, _), InZ index ->
-        if index >= 0 then
+  let (vec, sigma1) = eval_expr rho sigma e1 in
+  match vec with
+  | InB (base_addr, _) ->
+      let (index_val, sigma2) = eval_expr rho sigma1 e2 in
+      (match index_val with
+      | InZ index -> 
           let value = Hashtbl.find sigma2 (base_addr + index) in
           (value, sigma2)
-        else
-          failwith "ASTNth: Index out of bounds"
-    | _, InZ _ -> failwith "ASTNth: First argument must be a vector"
-    | _, _ -> failwith "ASTNth: Index must be an integer"
-
+      | _ -> failwith "Index must be an integer")
+  | _ -> failwith "First argument must be a vector"
 
 and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
   match exprProc with
@@ -206,7 +211,7 @@ and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
       | Some (InA addr) -> InA addr
       | _ -> failwith (id ^ " : Expected a variable address for reference passing")
       
-let rec eval_lvalue_to_string lvalue =
+and eval_lvalue_to_string lvalue =
   match lvalue with
   | ASTLValueIdent s -> s
   | ASTVectorValue (lv, _) -> eval_lvalue_to_string lv  
@@ -216,6 +221,26 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (stat : stat) : memo
   | ASTEcho expr ->
       let (result, updated_sigma) = eval_expr rho sigma expr in
       (updated_sigma, result :: omega) 
+  | ASTSet (ASTLValueIdent id, expr) ->
+    (match Hashtbl.find_opt rho id with
+     | Some (InA addr) ->
+         let (value, updated_sigma) = eval_expr rho sigma expr in
+         Hashtbl.replace sigma addr value;
+         (updated_sigma, omega)
+     | _ -> failwith ("Attempting to SET on an undeclared variable: " ^ id))
+| ASTSet (ASTVectorValue (vec_lval, index_expr), expr) ->
+    let vec_id = eval_lvalue_to_string vec_lval in
+    (match Hashtbl.find_opt rho vec_id with
+     | Some (InB (base_addr, size)) ->
+         let (index_val, sigma_after_index) = eval_expr rho sigma index_expr in
+         let (new_val, sigma_after_new_val) = eval_expr rho sigma_after_index expr in
+         (match index_val with
+          | InZ index when index >= 0 && index < size ->
+              Hashtbl.replace sigma_after_new_val (base_addr + index) new_val;
+              (sigma_after_new_val, omega)
+          | InZ _ -> failwith ("Index out of bounds in vector assignment")
+          | _ -> failwith ("Index expression did not evaluate to an integer in vector assignment"))
+     | _ -> failwith ("Vector identifier " ^ vec_id ^ " not found or not a vector in environment"))
   | ASTCall (proc_name, exprsProc) ->
     (match Hashtbl.find_opt rho proc_name with
     | Some (InP (cmds, proc_args, proc_env)) | Some (InPR (cmds, _, proc_args, proc_env)) ->
@@ -249,21 +274,6 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (stat : stat) : memo
     in
     let (final_sigma, final_omega) = loop sigma omega in  
     (final_sigma, final_omega) 
-  | ASTSet (lval, expr) ->
-      let id = eval_lvalue_to_string lval in
-      (match Hashtbl.find_opt rho id with
-       | Some (InA addr) ->
-           let (value, updated_sigma) = eval_expr rho sigma expr in
-           (match value with
-            | InZ n -> 
-              Hashtbl.replace sigma addr value;  
-              (updated_sigma, omega)  
-            | _ -> failwith "Only integers can be stored in memory")
-       | None ->
-        Printf.printf "Attempting to SET on an undeclared variable : %s\n" id;
-        Hashtbl.iter (fun key _ -> Printf.printf "Var in env: %s\n" key) rho;
-        failwith "Variable not declared during assignment"
-       | _ -> failwith "Variable not declared during assignment")
   | ASTIf (e1, e2, e3) ->
     let (condValue, sigma1) = eval_expr rho sigma e1 in
     match condValue with
@@ -276,7 +286,7 @@ and eval_def (rho : env) (sigma : memory) (definition : def) : env * memory =
   | ASTConst (x, _, expr) ->
     let (result, updated_sigma) = eval_expr rho sigma expr in
     Hashtbl.add rho x result;  
-    (rho, updated_sigma)      
+    (rho, updated_sigma)
   | ASTVar (x, _) ->
     let addr = alloc sigma in 
     Hashtbl.add rho x (InA addr); 
@@ -306,12 +316,12 @@ and eval_def (rho : env) (sigma : memory) (definition : def) : env * memory =
 
 and eval_cmds cmds env sigma omega = 
   match cmds with
+  | ASTStat stat ->
+    let updated_sigma, updated_omega = eval_stat env sigma omega stat in
+    updated_sigma, updated_omega
   | ASTDef (def, more_cmds) ->
       let new_env, new_sigma = eval_def env sigma def in
       eval_cmds more_cmds new_env new_sigma omega
-  | ASTStat stat ->
-      let updated_sigma, updated_omega = eval_stat env sigma omega stat in
-      updated_sigma, updated_omega
   | ASTStatWithCmds (stat, cmds) ->
       let updated_sigma, updated_omega = eval_stat env sigma omega stat in
       eval_cmds cmds env updated_sigma updated_omega

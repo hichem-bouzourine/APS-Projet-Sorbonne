@@ -149,7 +149,7 @@ and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
       match Hashtbl.find_opt rho id with
       | Some (InA addr) -> InA addr
       | _ -> failwith (id ^ " : Expected a variable address for reference passing")
-  
+
 and eval_stat (rho : env) (sigma : memory) (omega : output) (instruction : stat) : memory * output =
   match instruction with
   | ASTEcho expr ->
@@ -189,12 +189,13 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (instruction : stat)
   | ASTCall (proc_name, exprsProc) ->
     (match Hashtbl.find_opt rho proc_name with
     | Some (InP (cmds, proc_args, proc_env)) | Some (InPR (cmds, _, proc_args, proc_env)) ->
-        let evaluate_arg (proc_arg: singleArgProc) (exprProc: exprProc) : string * value = match proc_arg, exprProc with
+        let evaluate_arg (proc_arg: singleArgProc) (exprProc: exprProc) : string * value =
+          match proc_arg, exprProc with
           | ASTSingleArgProcVar(name, _), ASTExprProcAdr id ->
             (match Hashtbl.find_opt rho id with
              | Some (InA addr) -> (name, InA addr)
              | _ -> failwith (id ^ " : Expected a variable address for reference passing"))
-          | ASTSingleArgProc(name, _), ASTExpr e -> (name, eval_expr rho sigma e)
+          | ASTSingleArgProc(name, _), expr -> (name, eval_exprProc rho sigma expr)
           | _ -> failwith "Mismatch between procedure argument type and provided argument"
         in
         let evaluated_args = List.map2 evaluate_arg proc_args exprsProc in
