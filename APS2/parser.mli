@@ -25,6 +25,11 @@ type token =
   | INT
   | ADR
   | VARADR
+  | VEC
+  | ALLOC
+  | NTH
+  | LEN
+  | VSET
   | NUM of (int)
   | IDENT of (string)
 

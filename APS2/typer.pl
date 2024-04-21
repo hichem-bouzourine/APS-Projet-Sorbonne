@@ -177,17 +177,17 @@ type_expr(G,lambda(ARGUMENTS,E),funType(TYPEIS,T)):-
     recupererTypeArgs(ARGUMENTS,TYPEIS),
     type_expr(GI,E,T).
     /* (ALLOC) */
-type_expr(G,alloc(E),vectorType(T)):-   # ! a verifier plus tard
+type_expr(G,alloc(E),vectorType(_)):-
     type_expr(G,E,int).
     /* (LEN) */
-type_expr(G,len(E),int):-               # ! a verifier plus tard
+type_expr(G,len(E),int):-
     type_expr(G,E,vectorType(_)).
     /* (NTH) */
-type_expr(G,nth(E1,E2),T):-             # ! a verifier plus tard
+type_expr(G,nth(E1,E2),T):-
     type_expr(G,E1,vectorType(T)),
     type_expr(G,E2,int).
     /* (VSET) */
-type_expr(G,vset(E1,E2,E3),vectorType(T)):-  # ! a verifier plus tard
+type_expr(G,vset(E1,E2,E3),vectorType(T)):-
     type_expr(G,E1,vectorType(T)),
     type_expr(G,E2,int),
     type_expr(G,E3,T).

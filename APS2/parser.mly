@@ -51,25 +51,22 @@ def:
   | CONST IDENT singleType singleExpr { ASTConst($2, $3, $4) }
   | FUN IDENT singleType LBRA args RBRA singleExpr  { ASTFun($2, $3, $5, $7) }
   | FUN REC IDENT singleType LBRA args RBRA singleExpr { ASTFunRec($3, $4, $6, $8) } 
-  | VAR IDENT sTypes { ASTVar($2, $3) }
+  | VAR IDENT singleType { ASTVar($2, $3) }
   | PROC IDENT LBRA argsProc RBRA block  { ASTProc($2, $4, $6) }
   | PROC REC IDENT LBRA argsProc RBRA block { ASTProcRec($3, $5, $7) } 
 ;
 
 singleType:
-  | sTypes  {[$1]}
+  | INT {Type(Int)}
+  | BOOL {Type(Bool)}
+  | VOID { Type(Void) }  
+  | LPAR VEC singleType RPAR {ASTVectorType($3)}
   | LPAR types ARROW singleType RPAR { TypeFun($2, $4) }
 ;
 types:
   | singleType { [$1] }
   | singleType STAR types { $1::$3 }
 ;
-
-sTypes:
-  | INT {Type(Int)}
-  | BOOL {Type(Bool)}
-  | VOID { Type(Void) }  
-  | LPAR VEC sTypes RPAR {ASTVectorType($3)}
 
 
 singleArg: 

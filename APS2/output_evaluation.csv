@@ -1,4 +1,9 @@
 sample path, correct (yes/no), result,  expected
+Samples/APS0/isEven.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS0/pgcd.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS0/fact.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS0/pow.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS0/fib.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
 Samples/prog7.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  5
 Samples/ER(2024_2).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  6
 Samples/ER(2024_1).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  3
@@ -48,11 +53,21 @@ Samples/prog5.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or d
 Samples/ER(2023_2).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  3
 Samples/prog3.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  30
 Samples/prog10.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  56
+Samples/APS1/set.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS1/proc.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS1/while.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
 Samples/prog9.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  2
 Samples/prog1.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  20
+Samples/APS1a/swap.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS1a/recPow.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS1a/incr(ref).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
 Samples/DEF/DEF(ProcRec).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
 Samples/DEF/DEF(proc).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
 Samples/DEF/DEF(const).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  3
 Samples/DEF/DEF(VAR).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
 Samples/DEF/DEF(fun).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  50
 Samples/DEF/DEF(funRec).aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory,  6
+Samples/APS2/vect.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS2/invertTab.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS2/copyVect.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
+Samples/APS2/maxVec.aps, no, test_samples.sh: line 38: ./evaluateur: No such file or directory, 
