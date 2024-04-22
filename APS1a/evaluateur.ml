@@ -1,9 +1,11 @@
 open Ast
 
+(* Système de mémoire pour gérer les adresses et les valeurs stockées, étend APS1 avec des références *)
 type address = int
 type memory = (address, int) Hashtbl.t
 let next_address = ref 0
 
+(* Vérifie la conformité d'un opérateur primitif, identique à APS1 *)
 let primOpCheck op = 
   match op with
   | ASTId("not") -> true
@@ -17,12 +19,14 @@ let primOpCheck op =
   | ASTId("false") -> true
   | _ -> false
 
+(* Détermine si l'opérateur est un booléen, similaire à APS1 *)
 let boolOp op = 
   match op with
   | "true" -> true
   | "false" -> true
   | _ -> false
 
+(* Extension des types de valeurs pour inclure des adresses et des fermetures de procédures, nouveauté APS1a *)
 type output = value list
 and env = (string, value) Hashtbl.t
 and value = 
@@ -34,29 +38,33 @@ and value =
   | InPR of cmds * string * argsProc * env 
   | Closure of cmds * string list * env
 
+(* Allocation d'une nouvelle adresse en mémoire, mécanisme clé pour les références dans APS1a *)
 let alloc mem =
   let addr = !next_address in
   incr next_address;
   Hashtbl.add mem addr 0; 
   addr
   
-let print_value value = 
+(* Affichage des valeurs, gestion étendue des types non-entiers APS1a *)
+let print_value value = (* <-- fait avec l'aide d'un camarade dans la salle TME (Yanis & Salim Tabellout )*)
   match value with
     InZ(n) -> Printf.printf "%d\n" n
   | _ -> failwith ("Non-integer type")
 
 type output_stream = int list
 
-let get_arg_ident (arg) =   
+(* Extraction des identifiants des arguments, soutien aux procédures d'APS1a avec passage par référence *)
+let get_arg_ident (arg) =   (* <-- fait avec l'aide d'un camarade dans la salle TME (Yanis & Salim Tabellout )*)
   match arg with 
   ASTSingleArg (ident,_) -> ident 
   
-let rec get_args_in_string_list (argz) : (string list) =   
+let rec get_args_in_string_list (argz) : (string list) =   (* <-- fait avec l'aide d'un camarade dans la salle TME (Yanis & Salim Tabellout )*)
   match argz with 
   |  [] -> []
   |  a::argz2 -> 
       (get_arg_ident a)::(get_args_in_string_list argz2)
 
+(* Évaluation des opérations primitives, identique à APS1 *)
 let eval_prim op args = 
   match op, args with
   | ASTId("not"), [InZ n] -> InZ (if n = 0 then 1 else 0)
@@ -68,12 +76,14 @@ let eval_prim op args =
   | ASTId("div"), [InZ n1; InZ n2] -> InZ (n1 / n2)
   | _ -> failwith ("Unsupported operator or arguments")
 
+(* Conversion des booléens en valeurs entières, APS1a gère également cette opération *)
 let eval_bool op  = 
   match op with
   | "true" -> InZ 1
   | "false" -> InZ 0
   | _ -> failwith ("Unsupported bool operator")
 
+(* Évaluation des expressions, APS1a ajoute la gestion des références via des adresses en mémoire *)
 let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value =
   match expr with
   | ASTNum n -> InZ n
@@ -142,6 +152,7 @@ let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value =
        eval_expr new_rho sigma body_lambda
    | _ -> failwith "Function calls with complex expressions as functions not supported")
 
+(* Évaluation spécifique pour les expressions dans les appels de procédures, traitant valeurs et références *)
 and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
   match exprProc with
   | ASTExpr e -> eval_expr rho sigma e
@@ -150,6 +161,7 @@ and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
       | Some (InA addr) -> InA addr
       | _ -> failwith (id ^ " : Expected a variable address for reference passing")
 
+(* Traitement des instructions, incluant affectation et contrôle de flux avec gestion des références en APS1a *)
 and eval_stat (rho : env) (sigma : memory) (omega : output) (instruction : stat) : memory * output =
   match instruction with
   | ASTEcho expr ->
@@ -207,6 +219,7 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (instruction : stat)
         (sigma, new_omega)
     | _ -> failwith ("Procedure " ^ proc_name ^ " not found"))
 
+(* Définitions de variables, fonctions, et procédures avec passage par valeur ou référence selon APS1a *)
 and eval_def (rho : env) (sigma : memory) (definition : def) : env * memory =
   match definition with
   | ASTConst (x, _, expr) ->
@@ -240,6 +253,7 @@ and eval_def (rho : env) (sigma : memory) (definition : def) : env * memory =
     Hashtbl.add rho name proc_val;
     (rho, sigma)
 
+(* Évaluation des commandes et blocs *)
 and eval_cmds cmds env sigma omega = 
   match cmds with
   | ASTDef (def, more_cmds) ->
@@ -256,13 +270,12 @@ and eval_block (rho : env) (sigma : memory) (omega : output) (block : Ast.block)
   match block with
   | ASTBlock cmds -> eval_cmds cmds rho sigma omega
 
-  let rec eval_prog (p : Ast.block) =
-    let rho_init = Hashtbl.create 100 in  
-    let sigma_init = Hashtbl.create 100 in  
-    let omega_init = [] in  
-    let _, final_output = eval_block rho_init sigma_init omega_init p in
-    List.iter print_value final_output  
-
+let rec eval_prog (p : Ast.block) =
+  let rho_init = Hashtbl.create 100 in  
+  let sigma_init = Hashtbl.create 100 in  
+  let omega_init = [] in  
+  let _, final_output = eval_block rho_init sigma_init omega_init p in
+  List.iter print_value final_output  
 ;;
 
 let fname = Sys.argv.(1) in
