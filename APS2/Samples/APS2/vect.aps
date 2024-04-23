@@ -1,5 +1,6 @@
 [
-  CONST monvecteur (vec bool) (alloc 2);
+  VAR monvecteur (vec bool);
+  SET monvecteur (alloc 2);
   
   SET (nth monvecteur 0) true; 
   SET (nth monvecteur 1) false; 

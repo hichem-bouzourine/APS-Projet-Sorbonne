@@ -4,6 +4,7 @@ open Ast
 let next_address = ref 0
 let max_address = 10000
 
+
 (* Extension des types pour supporter la gestion des tableaux et blocs mémoire dans APS2 *)
 type address = int
 and memory = (address, value) Hashtbl.t
@@ -39,13 +40,6 @@ let boolOp op =
   | "false" -> true
   | _ -> false
 
-(* Allocation d'une adresse ou d'un bloc de mémoire, mécanismes clés pour les tableaux dans APS2 *)
-let alloc mem =
-  let addr = !next_address in
-  incr next_address;
-  Hashtbl.add mem addr (InZ 0);
-  addr
-
 (* Fonction utilitaire pour générer une plage d'entiers, utilisée dans l'allocation de blocs mémoire *)
 let range a b =
   let rec aux a b acc =
@@ -53,37 +47,54 @@ let range a b =
     else aux a (b-1) (b-1 :: acc)
   in aux a b []
 
+(** Allocation d'une adresse mémoire unique, vérifie la disponibilité dans la limite maximale *)
+let alloc mem =
+  if !next_address >= max_address then
+    failwith "Out of memory"
+  else (
+    let addr = !next_address in
+    incr next_address; 
+    Hashtbl.add mem addr (InZ 0);  
+    addr
+  )
+
+(** Allocation d'un bloc de mémoire de taille n, important pour la gestion des tableaux dans APS2 *)
 let allocn sigma n =
   let rec find_space addr =
-    if addr + n > max_address then failwith "Memory full"
-    else if List.for_all (fun i -> not (Hashtbl.mem sigma (addr + i))) (range 0 (n - 1))
+    if addr + n > max_address then
+      failwith "Memory full"
+    else if List.for_all (fun i -> not (Hashtbl.mem sigma (addr + i))) (range 0 n)
     then addr
     else find_space (addr + 1)
   in
   let start_addr = find_space !next_address in
   for i = 0 to n - 1 do
-    Hashtbl.add sigma (start_addr + i) (InZ 0)
+    Hashtbl.add sigma (start_addr + i) (InZ 0) 
   done;
+  next_address := start_addr + n;  
   (start_addr, sigma)
+
+
+let nth_vector_element vector_base index mem =
+  let actual_address = vector_base + index in
+  match Hashtbl.find_opt mem actual_address with
+  | Some value -> value
+  | None -> failwith "Index out of bounds or not allocated"
   
-(* Affichage des valeurs avec prise en charge des types introduits dans APS2 *)
-let print_value value = (* <-- fait avec l'aide d'un camarade dans la salle TME (Yanis & Salim Tabellout )*)
-  match value with
-    InZ(n) -> Printf.printf "%d\n" n
-  | _ -> failwith ("Non-integer type")
+let string_of_value = function
+  | InZ n -> string_of_int n
+  | InF _ -> "<function>"
+  | InFR _ -> "<function_rec>"
+  | InB (addr, size) -> Printf.sprintf "<block:%d size:%d>" addr size
+  | InA addr -> Printf.sprintf "<address:%d>" addr
+  | InP _ -> "<procedure>"
+  | InPR _ -> "<procedure_rec>"
+  | Closure _ -> "<closure>"
+
+let string_of_output output =
+  List.map string_of_value output |> String.concat " "
 
 type output_stream = int list
-
-(* Extraction des identifiants des arguments, ajustée pour les procédures manipulant des tableaux *)
-let get_arg_ident (arg) =   (* <-- fait avec l'aide d'un camarade dans la salle TME (Yanis & Salim Tabellout )*)
-  match arg with 
-  ASTSingleArg (ident,_) -> ident 
-  
-let rec get_args_in_string_list (argz) : (string list) =   (* <-- fait avec l'aide d'un camarade dans la salle TME (Yanis & Salim Tabellout )*)
-  match argz with 
-  |  [] -> []
-  |  a::argz2 -> 
-      (get_arg_ident a)::(get_args_in_string_list argz2)
 
 (* Évaluation des opérations primitives incluant la gestion des tableaux dans APS2 *)
 let eval_prim op args = 
@@ -189,32 +200,28 @@ let rec eval_expr (rho : env) (sigma : memory) (expr : singleExpr) : value * mem
       let (vec, sigma1) = eval_expr rho sigma e1 in
       let (index, sigma2) = eval_expr rho sigma1 e2 in
       let (new_val, sigma3) = eval_expr rho sigma2 e3 in
+      Printf.printf "Setting vector at index %d to %d\n" (match index with InZ i -> i | _ -> -1) (match new_val with InZ n -> n | _ -> -1);
       match vec, index with
       | InB (base_addr, size), InZ idx when idx >= 0 && idx < size ->
-        Hashtbl.replace sigma3 (base_addr + idx) new_val;
-        (InZ 0, sigma3)
+          Hashtbl.replace sigma3 (base_addr + idx) new_val;
+          Printf.printf "Successfully set\n";
+          (InZ 0, sigma3)
       | _ -> failwith "ASTVset: Invalid vector or index"
     end
-  | ASTLen e -> 
-    begin
-      let (vec_val, updated_sigma) = eval_expr rho sigma e in
-      match vec_val with
-      | InB (_, size) -> (InZ size, updated_sigma)
-      | _ -> failwith "ASTLen: Argument is not a vector"
-    end
-  | ASTNth (e1, e2) ->
-    begin
-      let (vec, sigma1) = eval_expr rho sigma e1 in
-      let (index, sigma2) = eval_expr rho sigma1 e2 in
-      match vec, index with
-      | InB (base_addr, size), InZ idx when idx >= 0 && idx < size ->
-        begin
-          match Hashtbl.find_opt sigma2 (base_addr + idx) with
-          | Some value -> (value, sigma2)
-          | None -> failwith "Vector element not initialized"
-        end
-      | _ -> failwith "ASTNth: Invalid vector or index"
-    end
+  | ASTLen e ->
+    let (vec_val, sigma_after_vec) = eval_expr rho sigma e in
+    (match vec_val with
+     | InB (_, size) -> (InZ size, sigma_after_vec)
+     | _ -> failwith "ASTLen: Argument is not a vector")
+  | ASTNth (vec_expr, idx_expr) ->
+    let (vec_val, sigma1) = eval_expr rho sigma vec_expr in
+    match vec_val with
+    | InB (base_addr, _) ->
+      let (idx_val, sigma2) = eval_expr rho sigma1 idx_expr in
+      (match idx_val with
+      | InZ index -> (nth_vector_element base_addr index sigma2, sigma2)
+      | _ -> failwith "Index must be an integer")
+    | _ -> failwith "First argument must be a vector"
 
 (* Évaluation des expressions dans les appels de procédures, avec support pour les tableaux d'APS2 *)
 and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
@@ -226,39 +233,71 @@ and eval_exprProc (rho : env) (sigma : memory) (exprProc : exprProc) : value =
       match Hashtbl.find_opt rho id with
       | Some (InA addr) -> InA addr
       | _ -> failwith (id ^ " : Expected a variable address for reference passing")
-     
+      
 (* Convertir une lvalue en sa représentation chaîne de caractères. supporte les identifiants simples et les éléments de tableau, facilitant la gestion des affectations dans APS2 *)
 and eval_lvalue_to_string lvalue =
   match lvalue with
   | ASTLValueIdent s -> s
   | ASTVectorValue (lv, _) -> eval_lvalue_to_string lv  
 
+and eval_lvalue_to_expr (lval: lValue) (rho: env) (sigma: memory) : value * memory =
+    match lval with
+    | ASTLValueIdent id ->
+        (match Hashtbl.find_opt rho id with
+         | Some (InA addr) ->
+             (match Hashtbl.find_opt sigma addr with
+              | Some value -> (value, sigma)
+              | None -> failwith ("Address not found in memory for variable " ^ id))
+         | Some value -> (value, sigma)
+         | None -> failwith ("Variable not defined in the environment: " ^ id))
+    | ASTVectorValue (base_lval, index_expr) ->
+        let (base, sigma1) = eval_lvalue_to_expr base_lval rho sigma in
+        let (index, sigma2) = eval_expr rho sigma1 index_expr in
+        match base, index with
+        | InB (base_addr, _), InZ idx ->
+            (match Hashtbl.find_opt sigma2 (base_addr + idx) with
+             | Some value -> (value, sigma2)
+             | None -> failwith "Index out of bounds or not allocated for vector")
+        | _ -> failwith "Invalid base type for vector indexing"
+
 (* Traitement des instructions avec mise à jour pour les affectations et manipulations de tableaux dans APS2 *)
 and eval_stat (rho : env) (sigma : memory) (omega : output) (stat : stat) : memory * output =
   match stat with
   | ASTEcho expr ->
       let (result, updated_sigma) = eval_expr rho sigma expr in
-      (updated_sigma, result :: omega) 
-  | ASTSet (ASTLValueIdent id, expr) ->
-    (match Hashtbl.find_opt rho id with
-     | Some (InA addr) ->
-         let (value, updated_sigma) = eval_expr rho sigma expr in
-         Hashtbl.replace sigma addr value;
-         (updated_sigma, omega)
-     | _ -> failwith ("Attempting to SET on an undeclared variable: " ^ id))
-| ASTSet (ASTVectorValue (vec_lval, index_expr), expr) ->
-    let vec_id = eval_lvalue_to_string vec_lval in
-    (match Hashtbl.find_opt rho vec_id with
-     | Some (InB (base_addr, size)) ->
-         let (index_val, sigma_after_index) = eval_expr rho sigma index_expr in
-         let (new_val, sigma_after_new_val) = eval_expr rho sigma_after_index expr in
-         (match index_val with
-          | InZ index when index >= 0 && index < size ->
-              Hashtbl.replace sigma_after_new_val (base_addr + index) new_val;
-              (sigma_after_new_val, omega)
-          | InZ _ -> failwith ("Index out of bounds in vector assignment")
-          | _ -> failwith ("Index expression did not evaluate to an integer in vector assignment"))
-     | _ -> failwith ("Vector identifier " ^ vec_id ^ " not found or not a vector in environment"))
+      let new_output = result :: omega in 
+      (updated_sigma, new_output)
+  | ASTSet (lval, expr) ->
+    begin
+      match lval with
+      | ASTLValueIdent id ->
+          let (value, updated_sigma) = eval_expr rho sigma expr in
+          (match Hashtbl.find_opt rho id with
+          | Some (InA addr) ->
+              Hashtbl.replace sigma addr value;  
+              (updated_sigma, omega)
+          | Some _ -> failwith (Printf.sprintf "Attempted to assign to a non-variable: %s" id)
+          | None ->
+              let addr = alloc sigma in 
+              Hashtbl.add rho id (InA addr);
+              Hashtbl.replace sigma addr value;
+              (sigma, omega))
+      | ASTVectorValue (base_lval, index_expr) ->
+          let (base, base_sigma) = eval_lvalue_to_expr base_lval rho sigma in
+          let (index, index_sigma) = eval_expr rho base_sigma index_expr in
+          let (value, final_sigma) = eval_expr rho index_sigma expr in
+          match base, index with
+          | InB (base_addr, size), InZ idx ->
+              if idx >= 0 && idx < size then
+                begin
+                  Hashtbl.replace final_sigma (base_addr + idx) value;  
+                  (final_sigma, omega)
+                end
+              else
+                failwith (Printf.sprintf "Vector index out of bounds: %d not in [0, %d)" idx size)
+          | _, InZ idx -> failwith (Printf.sprintf "Invalid vector access at index %d" idx)
+          | _ -> failwith "Invalid vector base or index type"
+    end
   | ASTCall (proc_name, exprsProc) ->
     (match Hashtbl.find_opt rho proc_name with
     | Some (InP (cmds, proc_args, proc_env)) | Some (InPR (cmds, _, proc_args, proc_env)) ->
@@ -298,7 +337,7 @@ and eval_stat (rho : env) (sigma : memory) (omega : output) (stat : stat) : memo
     | InZ 1 -> eval_block rho sigma1 omega e2  
     | InZ 0 -> eval_block rho sigma1 omega e3 
     | _ -> failwith "Non-integer condition in 'if'"
-     
+
 (* Définitions avec effet sur la mémoire pour les tableaux et structures modifiables d'APS2 *)
 and eval_def (rho : env) (sigma : memory) (definition : def) : env * memory =
   match definition with
@@ -350,14 +389,15 @@ and eval_block (rho : env) (sigma : memory) (omega : output) (block : Ast.block)
   match block with
   | ASTBlock cmds -> eval_cmds cmds rho sigma omega
 
-  let rec eval_prog (p : Ast.block) =
-    let rho_init = Hashtbl.create 100 in  
-    let sigma_init = Hashtbl.create 100 in  
-    let omega_init = [] in  
-    let _, final_output = eval_block rho_init sigma_init omega_init p in
-    List.iter print_value final_output  
-
+let eval_prog (p : Ast.block) =
+  let rho_init = Hashtbl.create 100 in
+  let sigma_init = Hashtbl.create 100 in
+  let omega_init = [] in
+  let _, final_output = eval_block rho_init sigma_init omega_init p in
+  let output_in_correct_order = List.rev final_output in
+  Printf.printf "%s" (string_of_output output_in_correct_order)
 ;;
+
 
 let fname = Sys.argv.(1) in
 let ic = open_in fname in
@@ -376,6 +416,6 @@ try
         exit 1
   in
   let _ = eval_prog p in
-  Printf.printf "Evaluation completed successfully.\n"
+  Printf.printf ""
 with
 | Lexer.Eof -> Printf.printf "Error: Unexpected end of file.\n"

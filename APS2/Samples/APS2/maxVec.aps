@@ -1,5 +1,6 @@
 [
-    CONST nums (vec int) (alloc 5);
+    VAR nums (vec int);
+    SET nums (alloc 5);
     SET (nth nums 0) 1;
     SET (nth nums 1) 3;
     SET (nth nums 2) 2;
