@@ -38,6 +38,7 @@ rule token = parse
   | "len"            { LEN }
   | "nth"            { NTH }
   | "vset"            { VSET }
+  | "RETURN"         { RETURN }
   (*Constantes numeriques*)
   | ['0'-'9']+('.'['0'-'9'])? as lxm { NUM(int_of_string lxm) }
   (*Identificateurs*)

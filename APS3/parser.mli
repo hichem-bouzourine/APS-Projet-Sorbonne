@@ -30,6 +30,7 @@ type token =
   | NTH
   | LEN
   | VSET
+  | RETURN
   | NUM of (int)
   | IDENT of (string)
 

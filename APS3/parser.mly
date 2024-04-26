@@ -13,6 +13,7 @@ open Ast
 %token VAR
 %token ADR VARADR
 %token VEC ALLOC NTH LEN VSET // APS2
+%token RETURN
 %token <int> NUM
 %token <string> IDENT
 
@@ -29,6 +30,7 @@ open Ast
 %type <Ast.singleExpr list> exprs
 %type <Ast.exprProc> exprProc
 %type <Ast.exprProc list> exprsProc
+%type <Ast.ret> ret
 
 %start prog
 
@@ -43,9 +45,13 @@ block:
 
 cmds:
   | stat { ASTStat($1) }
+  | ret { ASTRet($1)}
   | def SEMCOL cmds { ASTDef($1, $3) }
   | stat SEMCOL cmds { ASTStatWithCmds($1, $3) }
 ;
+
+ret:
+  | RETURN singleExpr { ASTReturn($2) }
 
 def:
   | CONST IDENT singleType singleExpr { ASTConst($2, $3, $4) }
@@ -53,7 +59,9 @@ def:
   | FUN REC IDENT singleType LBRA args RBRA singleExpr { ASTFunRec($3, $4, $6, $8) } 
   | VAR IDENT singleType { ASTVar($2, $3) }
   | PROC IDENT LBRA argsProc RBRA block  { ASTProc($2, $4, $6) }
-  | PROC REC IDENT LBRA argsProc RBRA block { ASTProcRec($3, $5, $7) } 
+  | PROC REC IDENT LBRA argsProc RBRA block { ASTProcRec($3, $5, $7) }
+  | FUN IDENT singleType LBRA argsProc RBRA block { ASTFunBlock($2, $3, $5, $7) }
+  | FUN REC IDENT singleType LBRA argsProc RBRA block { ASTFunRecBlock($3, $4, $6, $8) } 
 ;
 
 singleType:
@@ -99,7 +107,7 @@ lValue:
 
 exprProc:
   | singleExpr            {ASTExpr($1)}
-  | LPAR ADR IDENT RPAR   {ASTExprProcAdr($3)}
+  | LPAR ADR lValue RPAR   {ASTExprProcAdr($3)}
 
 exprsProc:
   | exprProc          {[$1]}
@@ -111,7 +119,7 @@ singleExpr:
   | LPAR IF singleExpr singleExpr singleExpr RPAR { ASTIf($3, $4, $5) }
   | LPAR AND singleExpr singleExpr RPAR { ASTAnd($3, $4) }
   | LPAR OR singleExpr singleExpr RPAR { ASTOr($3, $4) }
-  | LPAR singleExpr exprs RPAR { ASTApp($2, $3) }
+  | LPAR singleExpr exprsProc RPAR { ASTApp($2, $3) }
   | LBRA args RBRA singleExpr { ASTLambdaExpression($2, $4) }
   | LPAR ALLOC singleExpr RPAR {ASTAlloc($3)}
   | LPAR LEN singleExpr RPAR {ASTLen($3)}

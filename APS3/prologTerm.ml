@@ -109,7 +109,7 @@ let rec print_singleExpr e =
       print_singleExpr e;
       Printf.printf ",";
       Printf.printf "[";
-      print_exprs es;
+      print_exprs_proc es;
       Printf.printf "]";
       Printf.printf ")")
   | ASTLambdaExpression(args, singleExpr) -> (
@@ -160,10 +160,10 @@ and print_exprs es =
 
 and print_expr_proc ep =
   match ep with
-  | ASTExprProcAdr(ident) ->
+  | ASTExprProcAdr(lvalue) ->
     Printf.printf "exprProcAdr";
     Printf.printf "(";
-    Printf.printf "%s" ident;
+    print_lValue lvalue;
     Printf.printf ")"
   | ASTExpr(e) -> print_singleExpr e
 
@@ -295,6 +295,40 @@ and print_def d =
       Printf.printf ",";
       print_block corps;
       Printf.printf ")"
+  | ASTFunBlock(ident, t, args, corps) ->
+      Printf.printf "funBlock";
+      Printf.printf "(";
+      Printf.printf "%s" ident;
+      Printf.printf ",";
+      print_singleType t;
+      Printf.printf ",";
+      Printf.printf "[";
+      print_args_proc args;
+      Printf.printf "]";
+      Printf.printf ",";
+      print_block corps;
+      Printf.printf ")"
+  | ASTFunRecBlock(ident, t, args, corps) ->
+      Printf.printf "funRecBlock";
+      Printf.printf "(";
+      Printf.printf "%s" ident;
+      Printf.printf ",";
+      print_singleType t;
+      Printf.printf ",";
+      Printf.printf "[";
+      print_args_proc args;
+      Printf.printf "]";
+      Printf.printf ",";
+      print_block corps;
+      Printf.printf ")"
+
+and print_return r =
+  match r with
+  | ASTReturn e -> (
+    Printf.printf "return";
+    Printf.printf "(";
+    print_singleExpr e;
+    Printf.printf ")")
 
 and print_cmds c =
   match c with
@@ -310,6 +344,7 @@ and print_cmds c =
     print_stat stat;
     Printf.printf ",";
     print_cmds cmds)
+  | ASTRet e -> (print_return e)
 
 and print_block b =
   match b with 

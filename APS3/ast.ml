@@ -1,7 +1,7 @@
-type possibleType = Int | Bool | Void (* type void n'existe pas dans le formulaire mais le prof nous a dit qu'il faut l'ajouter *)
+type possibleType = Int | Bool | Void
 
 type singleType = 
-  Type of possibleType
+  | Type of possibleType
   | ASTVectorType of singleType
   | TypeFun of types * singleType
 and types = 
@@ -25,7 +25,7 @@ type singleExpr =
   | ASTIf of singleExpr * singleExpr * singleExpr
   | ASTAnd of singleExpr * singleExpr
   | ASTOr of singleExpr * singleExpr
-  | ASTApp of singleExpr * singleExpr list
+  | ASTApp of singleExpr * exprsProc
   | ASTLambdaExpression of args * singleExpr
   | ASTAlloc of singleExpr
   | ASTLen of singleExpr
@@ -37,7 +37,7 @@ and exprs =
 
 and exprProc = 
   | ASTExpr of singleExpr
-  | ASTExprProcAdr of string
+  | ASTExprProcAdr of lValue
 and exprsProc =
   exprProc list
 
@@ -59,9 +59,15 @@ and def =
   | ASTVar of string * singleType
   | ASTProc of string * argsProc * block
   | ASTProcRec of string * argsProc * block
-  
+  | ASTFunBlock of string * singleType * argsProc * block
+  | ASTFunRecBlock of string * singleType * argsProc * block
+
+and ret = 
+  | ASTReturn of singleExpr
+
 and cmds =
   | ASTStat of stat
+  | ASTRet of ret
   | ASTDef of def * cmds
   | ASTStatWithCmds of stat * cmds
                 
