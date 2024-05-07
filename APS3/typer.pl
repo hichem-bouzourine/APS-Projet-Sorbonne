@@ -50,6 +50,22 @@ type_cmds(_,[],void).
 type_cmds(G,[X|Y],void):-
 	type_stat(G,X,void),
 	type_cmds(G,Y,void).
+    /* RETURN */
+type_cmds(G,[return(E)],T):-
+    type_expr(G,E,T),
+    T\=void.
+    /* STAT0  -- (stat0) pour tout type t, si Γ `Stat s : void et Γ `Cmds cs : t alors Γ `Cmds (s;cs) : t*/ 
+type_cmds(G,[X|Y],T):-
+    type_stat(G,X,void),
+    type_cmds(G,Y,T).
+    /* STAT1 (stat1) si t != void, si Γ `Stat s : t + void et Γ `Cmds cs : t alors Γ `Cmds (s;cs) : t */
+type_cmds(G,[X|Y],T):-
+    type_stat(G,X,union(T,void)),
+    type_cmds(G,Y,T).
+type_cmds(Ctx, [Stat], T) :- 
+    T\=void, 
+    type_stat(Ctx, Stat, T).
+
 
 /* Definitions */
 
@@ -105,6 +121,21 @@ type_def(G,procRec(PROCEDURE,ARGUMENTS,E),GI):-
 	type_bloc(G3,E,T),
 	GI=[(PROCEDURE,funType(TYPEIS,T))|G].
 
+    /* funBlock */
+type_def(G,funBlock(FUN,T,ARGUMENTS,BLOC),GI):-
+    append(ARGUMENTS,G,G2),
+    type_bloc(G2,BLOC,T),
+    recupererTypeArgs(ARGUMENTS,TYPEIS),
+    GI=[(FUN,funType(TYPEIS,T))|G].
+
+    /* funRecBlock */
+type_def(G,funRecBlock(FUN,T,ARGUMENTS,BLOC),GI):-
+    recupererTypeArgs(ARGUMENTS,TYPEIS),
+    append(ARGUMENTS,G,G2),
+    G3 = [(FUN,funType(TYPEIS,T))|G2],
+    type_bloc(G3,BLOC,T),
+    GI=[(FUN,funType(TYPEIS,T))|G].
+
 /* Intruction */
     /* (ECHO) */
 type_stat(G,echo(E),void) :-
@@ -126,6 +157,10 @@ type_stat(G,while(C,E),void) :-
 type_stat(G,call(X,ARGUMENTS),void) :-
     type_expr(G,X,funType(ARGSTYPE,void)),
     verifier_argumentsp(G,ARGUMENTS,ARGSTYPE).
+/* RETURN */
+type_stat(_, return(E), T):-
+    type_expr(_, E, T),
+    T \= void.
 
 /* lValue */
     /* (LVAR) */
@@ -170,7 +205,7 @@ type_expr(G,or(E1,E2),bool):-
     /* (APP) */
 type_expr(G,app(E1,ARGUMENTS),T):- 
     type_expr(G,E1,funType(ARGSTYPE,T)),
-    check_args(G,ARGUMENTS,ARGSTYPE).
+    verifier_argumentsp(G,ARGUMENTS,ARGSTYPE).
     /* (ABS) */
 type_expr(G,lambda(ARGUMENTS,E),funType(TYPEIS,T)):- 
     append(ARGUMENTS,G,GI),
