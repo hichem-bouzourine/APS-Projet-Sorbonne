@@ -1,11 +1,9 @@
 [ 
-    VAR src (vec int);
-    SET src (alloc 10); 
+    CONST src (vec int) (alloc 10);
     SET (nth src 0) 7; 
     SET (nth src 1) 8; 
     SET (nth src 2) 9; 
-    VAR dest (vec int);
-    SET dest (alloc (len src)); 
+    CONST dest (vec int) (alloc (len src));
     VAR i int; 
     SET i 0; 
     WHILE (lt i (len src)) [ 

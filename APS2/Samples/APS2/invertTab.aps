@@ -1,6 +1,5 @@
 [
-  VAR arr (vec int);
-  SET arr (alloc 5);
+  CONST arr (vec int) (alloc 5);
   SET (nth arr 0) 1;
   SET (nth arr 1) 2;
   SET (nth arr 2) 3;
