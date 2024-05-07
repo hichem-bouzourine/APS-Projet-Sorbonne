@@ -37,19 +37,18 @@ type_prog(G,prog(X),void):-
     type_bloc(G,X,void).
 
 /* Bloc */
-type_bloc(G,block(X),void):-
-    type_cmds(G,X,void).
+type_bloc(G,block(X),T):-
+    type_cmds(G,X,T).
 
 /* Suite de commandes */
     /* (DEFS) */
-type_cmds(G,[cmds(X)|Y],void):-
+type_cmds(G,[cmds(X)|Y],T):-
 	type_def(G,X,G2),
-	type_cmds(G2,Y,void).
+	type_cmds(G2,Y,T).
     /* (END)  */
 type_cmds(_,[],void).
-type_cmds(G,[X|Y],void):-
-	type_stat(G,X,void),
-	type_cmds(G,Y,void).
+type_cmds(G,X,T):-
+	type_stat(G,X,T),
     /* RETURN */
 type_cmds(G,[return(E)],T):-
     type_expr(G,E,T),
@@ -121,11 +120,12 @@ type_def(G,procRec(PROCEDURE,ARGUMENTS,E),GI):-
 	type_bloc(G3,E,T),
 	GI=[(PROCEDURE,funType(TYPEIS,T))|G].
 
-    /* funBlock */
+    /* (funBlock) si Γ[x1 : t1; ...; xn : tn] `Block bk : t alors Γ `Def (FUN x t [x1:t1, ...,xn:tn] bk) : Γ[x : (t1 * ... * tn -> t)] */
 type_def(G,funBlock(FUN,T,ARGUMENTS,BLOC),GI):-
-    append(ARGUMENTS,G,G2),
-    type_bloc(G2,BLOC,T),
     recupererTypeArgs(ARGUMENTS,TYPEIS),
+    append(ARGUMENTS,G,G2),
+    G3 = [(FUN,funType(TYPEIS,T))|G2],
+    type_bloc(G3,BLOC,T),
     GI=[(FUN,funType(TYPEIS,T))|G].
 
     /* funRecBlock */
@@ -145,14 +145,22 @@ type_stat(G,set(LVALUE,E),void):-
     type_lvalue(G,LVALUE,T),
     type_expr(G,E,T).
     /* (IF) */
-type_stat(G,if(E1,E2,E3),void) :-
+type_stat(G,if(E1,E2,E3),T) :-
+    type_expr(G,E1,bool),
+    type_bloc(G,E2,T),
+    type_bloc(G,E3,T).
+type_stat(G,if(E1,E2,E3),union(T, void)) :-
     type_expr(G,E1,bool),
     type_bloc(G,E2,void),
+    type_bloc(G,E3,T).
+type_stat(G,if(E1,E2,E3),union(T, void)) :-
+    type_expr(G,E1,bool),
+    type_bloc(G,E2,T),
     type_bloc(G,E3,void).
     /* (WHILE) */
-type_stat(G,while(C,E),void) :-
+type_stat(G,while(C,E),union(T, void)) :-
     type_expr(G,C,bool),
-    type_bloc(G,E,void).
+    type_bloc(G,E,T).
     /* (CALL) */ 
 type_stat(G,call(X,ARGUMENTS),void) :-
     type_expr(G,X,funType(ARGSTYPE,void)),

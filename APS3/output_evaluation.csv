@@ -11,8 +11,9 @@ Samples/ER(2023_1).aps, yes, 5,  5
 Samples/prog4.aps, yes, 100,  100
 Samples/CMDS/CMDS(defs).aps, yes, 1,  1
 Samples/CMDS/CMDS(end).aps, yes, 42,  42
-Samples/ASP3/FunBlock.aps, no, Fatal error: exception Failure("ASTLen: Argument is not a vector"), 
+Samples/ASP3/FunBlock.aps, no, Syntax error on line 1, column 85, 
 Samples/ASP3/Return.aps, no, Fatal error: exception Failure("Lexing error: unexpected character 'R' at line 1, position 9"), 
+Samples/ASP3/FunRecBlock.aps, no, Syntax error on line 1, column 76, 
 Samples/prog8.aps, yes, 3,  3
 Samples/prog6.aps, yes, 9,  9
 Samples/ER(2023_3).aps, yes, 5,  5

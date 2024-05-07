@@ -1,11 +1,1 @@
-[ 
-    FUN REC x (vec (vec bool))  [xss : (vec (vec bool)), m : int, i : int] ( 
-        if (lt i (len xss)) 
-        (x (vset xss i (alloc m)) m (add i 1)) xss
-    ); 
-    FUN matrice (vec (vec bool)) [n: int, m : int] (
-        x (alloc n) m 0
-    ); 
-    CONST xss (vec(vec bool)) (matrice 1 2); 
-    ECHO (len xss)
-]
+[CONST myVector (vec int) (alloc 2); FUN affichageBloc int [ x:(vec int), y:int] [SET (nth x y) y]; ECHO 88]
